@@ -2,25 +2,34 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Email Login</title>
+  <title>Email Sender</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h2>Send Bulk Email</h2>
+  <h2>Bulk Email Sender</h2>
   <form id="emailForm">
+    <label>Sender Name:</label><br>
+    <input type="text" id="senderName" placeholder="Your Name" required><br><br>
+
+    <label>Sender Email (ID):</label><br>
+    <input type="email" id="senderEmail" placeholder="you@example.com" required><br><br>
+
+    <label>App Password:</label><br>
+    <input type="password" id="senderPass" placeholder="App Password" required><br><br>
+
     <label>Recipients (comma separated):</label><br>
-    <input type="text" id="recipients" placeholder="user1@example.com,user2@example.com"><br><br>
+    <textarea id="recipients" placeholder="user1@example.com,user2@example.com" required></textarea><br><br>
 
     <label>Subject:</label><br>
-    <input type="text" id="subject" placeholder="Enter subject"><br><br>
+    <input type="text" id="subject" placeholder="Enter subject" required><br><br>
 
     <label>Message:</label><br>
-    <textarea id="message" placeholder="Enter HTML or plain text"></textarea><br><br>
+    <textarea id="message" placeholder="Enter HTML or plain text" required></textarea><br><br>
 
     <button type="submit">Send Emails</button>
+    <button type="button" onclick="logout()">Logout</button>
   </form>
 
-  <p id="status"></p>
   <script src="script.js"></script>
 </body>
 </html>
