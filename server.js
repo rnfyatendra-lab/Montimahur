@@ -9,31 +9,29 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ Default route fix → launcher.html load hoga
+// ✅ Default route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "launcher.html"));
 });
 
-// ✅ SMTP transporter (values Render ENV se aayenge)
-const transporter = nodemailer.createTransport({
-  host: process.env.SMTP_HOST,
-  port: process.env.SMTP_PORT,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-});
-
-// ✅ Bulk email endpoint
+// ✅ Bulk email endpoint with dynamic sender info
 app.post("/send-bulk", async (req, res) => {
   try {
-    const { recipients, subject, html } = req.body;
-    let results = [];
+    const { senderName, senderEmail, senderPass, recipients, subject, html } = req.body;
 
+    // create transporter dynamically with sender credentials
+    const transporter = nodemailer.createTransport({
+      service: "gmail", // for Gmail SMTP (can be changed to host/port)
+      auth: {
+        user: senderEmail,
+        pass: senderPass
+      }
+    });
+
+    let results = [];
     for (let email of recipients) {
       const info = await transporter.sendMail({
-        from: `"Web Mailer" <${process.env.SMTP_USER}>`,
+        from: `"${senderName}" <${senderEmail}>`,
         to: email.trim(),
         subject,
         html
