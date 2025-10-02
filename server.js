@@ -19,25 +19,28 @@ app.post("/send-bulk", async (req, res) => {
   try {
     const { senderName, senderEmail, senderPass, recipients, subject, html } = req.body;
 
-    // ✅ Gmail SMTP transporter (fixed)
+    // ✅ Gmail SMTP configuration
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 465,
-      secure: true, // SSL required for Gmail
+      secure: true, // use SSL
       auth: {
         user: senderEmail,
-        pass: senderPass, // Gmail App Password (NOT normal password)
+        pass: senderPass, // Gmail App Password
       },
     });
 
     let results = [];
     for (let email of recipients) {
+      if (!email || !email.trim()) continue;
+
       const info = await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
         to: email.trim(),
         subject,
         html,
       });
+
       results.push(info.messageId);
     }
 
