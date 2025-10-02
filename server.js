@@ -34,12 +34,16 @@ app.post("/send-bulk", async (req, res) => {
     for (let email of recipients) {
       if (!email || !email.trim()) continue;
 
-      const info = await transporter.sendMail({
-        from: `"${senderName}" <${senderEmail}>`,
-        to: email.trim(),
-        subject,
-        html,
-      });
+      const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,     // TLS port
+  secure: false, // TLS requires false here
+  auth: {
+    user: senderEmail,
+    pass: senderPass,
+  },
+});
+
 
       results.push(info.messageId);
     }
