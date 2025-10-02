@@ -9,7 +9,12 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// SMTP transporter (set values in Render/ENV)
+// ✅ Default route fix → launcher.html load hoga
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "launcher.html"));
+});
+
+// ✅ SMTP transporter (values Render ENV se aayenge)
 const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
@@ -20,7 +25,7 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// API endpoint
+// ✅ Bulk email endpoint
 app.post("/send-bulk", async (req, res) => {
   try {
     const { recipients, subject, html } = req.body;
@@ -43,4 +48,4 @@ app.post("/send-bulk", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on ${PORT}`));
