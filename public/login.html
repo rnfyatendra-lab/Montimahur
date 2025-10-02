@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Email Login</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h2>Send Bulk Email</h2>
+  <form id="emailForm">
+    <label>Recipients (comma separated):</label><br>
+    <input type="text" id="recipients" placeholder="user1@example.com,user2@example.com"><br><br>
+
+    <label>Subject:</label><br>
+    <input type="text" id="subject" placeholder="Enter subject"><br><br>
+
+    <label>Message:</label><br>
+    <textarea id="message" placeholder="Enter HTML or plain text"></textarea><br><br>
+
+    <button type="submit">Send Emails</button>
+  </form>
+
+  <p id="status"></p>
+  <script src="script.js"></script>
+</body>
+</html>
