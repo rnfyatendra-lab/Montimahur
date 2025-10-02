@@ -9,23 +9,25 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ Default route
+// Default route
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "launcher.html"));
 });
 
-// ✅ Bulk email endpoint with dynamic sender info
+// Bulk email endpoint
 app.post("/send-bulk", async (req, res) => {
   try {
     const { senderName, senderEmail, senderPass, recipients, subject, html } = req.body;
 
-    // create transporter dynamically with sender credentials
+    // ✅ Gmail SMTP transporter (fixed)
     const transporter = nodemailer.createTransport({
-      service: "gmail", // for Gmail SMTP (can be changed to host/port)
+      host: "smtp.gmail.com",
+      port: 465,
+      secure: true, // SSL required for Gmail
       auth: {
         user: senderEmail,
-        pass: senderPass
-      }
+        pass: senderPass, // Gmail App Password (NOT normal password)
+      },
     });
 
     let results = [];
@@ -34,16 +36,17 @@ app.post("/send-bulk", async (req, res) => {
         from: `"${senderName}" <${senderEmail}>`,
         to: email.trim(),
         subject,
-        html
+        html,
       });
       results.push(info.messageId);
     }
 
     res.json({ success: true, sent: results.length });
   } catch (err) {
+    console.error("❌ Email Send Error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`✅ Server running on ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
