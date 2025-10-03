@@ -7,8 +7,8 @@ const path = require("path");
 const app = express();
 
 // Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use(session({
   secret: "bulkmail_secret",
@@ -24,12 +24,15 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// ✅ Login
+// ✅ Login (updated credentials)
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
-  // Default credentials
-  if (username === "admin" && password === "1234") {
+  // Updated credentials
+  const AUTH_USER = "Lodhiyatendra";
+  const AUTH_PASS = "lodhi882@#";
+
+  if (username === AUTH_USER && password === AUTH_PASS) {
     req.session.user = username;
     res.json({ success: true });
   } else {
@@ -49,17 +52,15 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender
+// ✅ Bulk Mail Sender with UTF-8 templates
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
-    // Check if any field blank
     if (!senderName || !senderEmail || !appPassword || !subject || !message || !recipients) {
       return res.json({ success: false, message: "⚠️ Please fill all fields before sending." });
     }
 
-    // Clean recipients
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
@@ -77,12 +78,12 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Send with TO instead of BCC
     let mailOptions = {
       from: `"${senderName}" <${senderEmail}>`,
-      to: recipientList,   // 👈 अब TO में सभी दिखेंगे
-      subject,
-      text: message
+      to: recipientList, // ✅ TO में सभी दिखेंगे
+      subject: subject,
+      text: message,     // Plain text (works for all languages)
+      html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>` // ✅ HTML भी UTF-8 safe
     };
 
     await transporter.sendMail(mailOptions);
