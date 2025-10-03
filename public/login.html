@@ -1,31 +1,40 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fast Mail Login</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Fast Mail — Login</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <div class="container">
-    <h2>🔑 Fast Mail Login</h2>
+  <div class="card">
+    <h1>Fast Mail — Login</h1>
     <form id="loginForm">
-      <input type="email" id="loginEmail" placeholder="Your Gmail" required>
-      <input type="password" id="loginPass" placeholder="App Password" required>
+      <input id="apiKey" type="password" placeholder="SendGrid API Key" required />
+      <input id="senderEmail" type="email" placeholder="Sender Email (verified in SendGrid)" required />
       <button type="submit">Login</button>
     </form>
+    <p class="small">Your API key is stored in a server session for this browser only (use HTTPS in production).</p>
   </div>
+
   <script>
-    document.getElementById("loginForm").addEventListener("submit", (e) => {
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const email = document.getElementById("loginEmail").value;
-      const pass = document.getElementById("loginPass").value;
+      const apiKey = document.getElementById('apiKey').value.trim();
+      const senderEmail = document.getElementById('senderEmail').value.trim();
 
-      // Store credentials in session (not secure for production)
-      sessionStorage.setItem("senderEmail", email);
-      sessionStorage.setItem("senderPass", pass);
-
-      window.location.href = "launcher.html";
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ apiKey, senderEmail })
+      });
+      const data = await res.json();
+      if (data.success) {
+        // go to dashboard
+        window.location.href = '/dashboard.html';
+      } else {
+        alert('Login failed: ' + (data.error || 'unknown'));
+      }
     });
   </script>
 </body>
