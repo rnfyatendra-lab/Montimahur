@@ -1,4 +1,4 @@
-const express = require("express");
+  const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
 const nodemailer = require("nodemailer");
@@ -73,3 +73,10 @@ app.post("/send-mail", async (req, res) => {
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("🚀 Server running on port " + PORT));
+
+
+// Root route -> open login page
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
+
