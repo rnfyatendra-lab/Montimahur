@@ -1,23 +1,33 @@
-document.getElementById("mailForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("loginForm");
 
-  let formData = Object.fromEntries(new FormData(e.target).entries());
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
 
-  let res = await fetch("/send-mail", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(formData)
-  });
+      const formData = new FormData(loginForm);
+      const data = Object.fromEntries(formData.entries());
 
-  let result = await res.json();
+      try {
+        const res = await fetch("/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data)
+        });
 
-  if (result.success) {
-    alert(result.message); // ✅ Popup success
-  } else {
-    alert(result.message); // ❌ Popup error
+        const result = await res.json();
+
+        if (result.success) {
+          document.getElementById("loginMsg").innerText = "✅ Login successful! Redirecting...";
+          setTimeout(() => {
+            window.location.href = "/launcher";
+          }, 1000);
+        } else {
+          document.getElementById("loginMsg").innerText = "❌ " + result.message;
+        }
+      } catch (err) {
+        document.getElementById("loginMsg").innerText = "❌ Server error: " + err.message;
+      }
+    });
   }
 });
-
-function logout() {
-  window.location.href = "/logout";
-}
