@@ -85,3 +85,6 @@ app.post("/send-mail", async (req, res) => {
 // Render-compatible Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+
+const USER = { username: "admin", password: "1234" };
+
