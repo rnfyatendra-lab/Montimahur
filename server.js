@@ -11,12 +11,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(session({
-  secret: "fastmail_secret",
+  secret: "bulkmail_secret",
   resave: false,
   saveUninitialized: false
 }));
 
-// Serve static files from public folder
+// Serve static files
 app.use(express.static(path.join(__dirname, "public")));
 
 // ✅ Root route → login.html
@@ -35,7 +35,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-// Launcher (protected)
+// Launcher page (protected)
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(__dirname, "public", "launcher.html"));
@@ -47,10 +47,13 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// Send Mail API (⚠️ Render पर Gmail SMTP block होगा — API service जैसे SendGrid better है)
+// ✅ Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
+
+    // convert comma-separated list → array
+    let recipientList = recipients.split(",").map(r => r.trim()).filter(r => r);
 
     let transporter = nodemailer.createTransport({
       service: "gmail",
@@ -60,21 +63,25 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    let mailOptions = {
-      from: `"${senderName}" <${senderEmail}>`,
-      to: recipients,
-      subject: subject,
-      text: message
-    };
+    // loop through recipients and send
+    for (let email of recipientList) {
+      let mailOptions = {
+        from: `"${senderName}" <${senderEmail}>`,
+        to: email,
+        subject: subject,
+        text: message
+      };
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Sent to ${email}`);
+    }
 
-    await transporter.sendMail(mailOptions);
-    res.json({ success: true, message: "✅ Mail sent successfully!" });
+    res.json({ success: true, message: `✅ Mails sent to ${recipientList.length} recipients!` });
   } catch (err) {
     console.error("Mail Error:", err.message);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
   }
 });
 
-// ✅ Render-compatible Port
+// Render-compatible Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
