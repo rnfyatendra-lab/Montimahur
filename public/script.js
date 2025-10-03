@@ -46,7 +46,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (result.success) {
         alert(result.message); // ✅ Popup success
-        mailForm.reset(); // clear form after success
+        // ❌ mailForm.reset() हटा दिया → details अब बनी रहेंगी
       } else {
         alert(result.message); // ❌ Popup error
       }
