@@ -2,23 +2,18 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Fast Mail Launcher</title>
+  <title>Login - Bulk Mail Launcher</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="box">
-    <h2>📨 Fast Mail Launcher</h2>
-    <form id="mailForm">
-      <input type="text" name="senderName" placeholder="Sender Name" required>
-      <input type="email" name="senderEmail" placeholder="Your Gmail" required>
-      <input type="password" name="appPassword" placeholder="App Password" required>
-      <input type="text" name="subject" placeholder="Subject" required>
-      <textarea name="message" placeholder="Message Body" required></textarea>
-      <textarea name="recipients" placeholder="Recipients (comma separated)" required></textarea>
-      <button type="submit">Send All</button>
+    <h2>🔐 Login</h2>
+    <form id="loginForm">
+      <input type="text" name="username" placeholder="Username" required>
+      <input type="password" name="password" placeholder="Password" required>
+      <button type="submit">Login</button>
     </form>
-    <button onclick="logout()">Logout</button>
-    <p id="mailMsg"></p>
+    <p id="loginMsg"></p>
   </div>
   <script src="script.js"></script>
 </body>
