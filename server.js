@@ -13,18 +13,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
   secret: "fastmail_secret",
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false
 }));
 
+// Serve static files from public folder
 app.use(express.static(path.join(__dirname, "public")));
 
-// Fake Login User
-const USER = { username: "admin", password: "1234" };
+// ✅ Root route → login.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
+});
 
 // Login API
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  if (username === USER.username && password === USER.password) {
+  if (username === "admin" && password === "1234") {
     req.session.user = username;
     res.json({ success: true });
   } else {
@@ -32,19 +35,19 @@ app.post("/login", (req, res) => {
   }
 });
 
-// Protect launcher page
+// Launcher (protected)
 app.get("/launcher", (req, res) => {
-  if (!req.session.user) return res.redirect("/login.html");
+  if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(__dirname, "public", "launcher.html"));
 });
 
 // Logout
 app.get("/logout", (req, res) => {
   req.session.destroy();
-  res.redirect("/login.html");
+  res.redirect("/");
 });
 
-// Send Mail API
+// Send Mail API (⚠️ Render पर Gmail SMTP block होगा — API service जैसे SendGrid better है)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -65,64 +68,13 @@ app.post("/send-mail", async (req, res) => {
     };
 
     await transporter.sendMail(mailOptions);
-    res.json({ success: true, message: "Mail sent successfully!" });
+    res.json({ success: true, message: "✅ Mail sent successfully!" });
   } catch (err) {
-    res.json({ success: false, message: "Mail sending failed: " + err.message });
+    console.error("Mail Error:", err.message);
+    res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
   }
 });
 
+// ✅ Render-compatible Port
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("🚀 Server running on port " + PORT));
-
-
-const express = require("express");
-const session = require("express-session");
-const bodyParser = require("body-parser");
-const path = require("path");
-
-const app = express();
-
-// Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
-
-app.use(session({
-  secret: "fastmail_secret",
-  resave: false,
-  saveUninitialized: false
-}));
-
-// Public folder serve
-app.use(express.static(path.join(__dirname, "public")));
-
-// ✅ Root route → always load login.html
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
-});
-
-// Launcher protected route
-app.get("/launcher", (req, res) => {
-  if (!req.session.user) return res.redirect("/login.html");
-  res.sendFile(path.join(__dirname, "public", "launcher.html"));
-});
-
-// Logout route
-app.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/");
-});
-
-// Dummy login (for testing)
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  if (username === "admin" && password === "1234") {
-    req.session.user = username;
-    res.json({ success: true });
-  } else {
-    res.json({ success: false, message: "Invalid credentials" });
-  }
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log("🚀 Server running at http://localhost:" + PORT));
-
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
