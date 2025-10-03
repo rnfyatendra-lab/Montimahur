@@ -1,7 +1,7 @@
 {
   "name": "fast-mail-launcher",
   "version": "1.0.0",
-  "description": "Bulk Mail Sender with Login",
+  "description": "Bulk Mail Sender with Login (Render Ready)",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -10,6 +10,10 @@
     "express": "^4.18.2",
     "express-session": "^1.17.3",
     "body-parser": "^1.20.2",
-    "nodemailer": "^6.9.11"
+    "nodemailer": "^6.9.11",
+    "path": "^0.12.7"
+  },
+  "engines": {
+    "node": ">=18.x"
   }
 }
