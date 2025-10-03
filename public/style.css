@@ -1,60 +1,9 @@
-body {
-  font-family: Arial, sans-serif;
-  background: #f4f6fb;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-
-.container {
-  background: #fff;
-  padding: 30px;
-  border-radius: 15px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  width: 400px;
-  max-width: 90%;
-  text-align: center;
-}
-
-h2 {
-  margin-bottom: 20px;
-  color: #222;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-input, textarea, button {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 14px;
-}
-
-textarea {
-  resize: vertical;
-  min-height: 70px;
-}
-
-button {
-  background: #2d79f3;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 15px;
-}
-
-button:hover {
-  background: #1755c5;
-}
-
-.buttons {
-  display: flex;
-  justify-content: space-between;
-  gap: 10px;
-}
+body { font-family: Inter, Arial, sans-serif; background:#f4f6fb; display:flex; align-items:center; justify-content:center; height:100vh; margin:0; }
+.card { background:#fff; width:720px; max-width:95%; padding:26px; border-radius:12px; box-shadow:0 8px 30px rgba(15,30,60,0.08); }
+h1 { margin:0 0 12px; font-size:22px; }
+input, textarea { width:100%; padding:12px; margin:8px 0; border-radius:8px; border:1px solid #e3e7ef; box-sizing:border-box; font-size:14px; }
+textarea { min-height:120px; resize:vertical; }
+.row { display:flex; gap:10px; margin-top:8px; }
+button { flex:1; padding:12px; border-radius:8px; border:none; background:#2d79f3; color:#fff; cursor:pointer; }
+button#logoutBtn { background:#e24b4b; }
+.small { font-size:12px; color:#777; margin-top:8px; }
