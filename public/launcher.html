@@ -1,27 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html>
 <head>
-  <meta charset="UTF-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Fast Mail Launcher</title>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Fast Mail — Dashboard</title>
   <link rel="stylesheet" href="style.css"/>
-  <script src="script.js" defer></script>
 </head>
 <body>
-  <div class="container">
-    <h2>📧 Fast Mail Launcher</h2>
-    <form id="emailForm">
-      <input type="text" id="senderName" placeholder="Sender Name" required>
-      <input type="text" id="senderEmail" readonly>
-      <input type="text" id="senderPass" readonly>
-      <input type="text" id="subject" placeholder="Subject" required>
-      <textarea id="message" placeholder="Message Body" required></textarea>
-      <textarea id="recipients" placeholder="Recipients (comma or newline)" required></textarea>
-      <div class="buttons">
-        <button type="submit">Send All</button>
-        <button type="button" onclick="logout()">Logout</button>
+  <div class="card">
+    <h1>Fast Mail Launcher</h1>
+    <form id="sendForm">
+      <input id="subject" placeholder="Subject" required />
+      <textarea id="html" placeholder="HTML message body"></textarea>
+      <textarea id="recipients" placeholder="Recipients — comma or newline separated" required></textarea>
+
+      <div class="row">
+        <button type="submit">Send Now</button>
+        <button type="button" id="logoutBtn">Logout</button>
       </div>
+
+      <div style="margin-top:8px">
+        <label>Batch size: <input id="batchSize" type="number" value="100" min="1" style="width:80px"/></label>
+        <label style="margin-left:12px">Concurrency: <input id="concurrency" type="number" value="4" min="1" style="width:60px"/></label>
+      </div>
+
+      <p id="status" style="margin-top:10px"></p>
     </form>
   </div>
+
+  <script src="script.js" defer></script>
 </body>
 </html>
