@@ -1,51 +1,51 @@
-document.addEventListener("DOMContentLoaded", () => {
-  // Load saved credentials from session
-  const email = sessionStorage.getItem("senderEmail");
-  const pass = sessionStorage.getItem("senderPass");
+// dashboard behavior
+document.addEventListener('DOMContentLoaded', async () => {
+  // check auth
+  const r = await fetch('/api/me');
+  const info = await r.json();
+  if (!info.authenticated) {
+    window.location.href = '/login.html';
+    return;
+  }
+});
 
-  if (!email || !pass) {
-    alert("⚠️ Please login first!");
-    window.location.href = "login.html";
+document.getElementById('sendForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const subject = document.getElementById('subject').value.trim();
+  const html = document.getElementById('html').value.trim();
+  const recipientsRaw = document.getElementById('recipients').value;
+  const batchSize = parseInt(document.getElementById('batchSize').value) || 100;
+  const concurrency = parseInt(document.getElementById('concurrency').value) || 4;
+
+  // parse recipients by comma or newline
+  const recipients = recipientsRaw.split(/[\n,]+/).map(s => s.trim()).filter(s => s && s.includes('@'));
+  if (recipients.length === 0) {
+    alert('Provide at least one valid recipient');
     return;
   }
 
-  document.getElementById("senderEmail").value = email;
-  document.getElementById("senderPass").value = pass;
-});
-
-document.getElementById("emailForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const senderName = document.getElementById("senderName").value.trim();
-  const senderEmail = document.getElementById("senderEmail").value.trim();
-  const senderPass = document.getElementById("senderPass").value.trim();
-  const recipients = document.getElementById("recipients").value
-    .split(/[\n,]+/)
-    .map(r => r.trim())
-    .filter(r => r);
-  const subject = document.getElementById("subject").value.trim();
-  const message = document.getElementById("message").value;
-
+  document.getElementById('status').innerText = 'Sending...';
   try {
-    const res = await fetch("/send-bulk", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senderName, senderEmail, senderPass, recipients, subject, html: message })
+    const res = await fetch('/api/send-bulk', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ subject, html, recipients, batchSize, concurrency })
     });
-
     const data = await res.json();
     if (data.success) {
-      alert(`✅ Sent ${data.sent} emails successfully!`);
-      document.getElementById("emailForm").reset();
+      document.getElementById('status').innerText = `Request accepted. approx sent: ${data.sentApprox || recipients.length}`;
+      alert('✅ Send request completed (approx). Check webhooks for exact delivery status.');
     } else {
-      alert(`❌ Error: ${data.error}`);
+      document.getElementById('status').innerText = `Error: ${data.error}`;
+      alert('❌ Send failed: ' + (data.error || 'unknown'));
     }
   } catch (err) {
-    alert(`❌ Network Error: ${err.message}`);
+    document.getElementById('status').innerText = 'Network error: ' + err.message;
+    alert('Network error: ' + err.message);
   }
 });
 
-function logout() {
-  sessionStorage.clear();
-  window.location.href = "login.html";
-}
+document.getElementById('logoutBtn').addEventListener('click', async () => {
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/login.html';
+});
