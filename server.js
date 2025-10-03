@@ -51,10 +51,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Utility: Delay function
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+// Utility: small random delay
+const smallDelay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ✅ Bulk Mail Sender (one by one with delay)
+// ✅ Bulk Mail Sender (parallel + small stagger)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -80,26 +80,26 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Send mail one by one with 5 sec delay
-    for (let i = 0; i < recipientList.length; i++) {
-      let mailOptions = {
-        from: `"${senderName}" <${senderEmail}>`,
-        to: recipientList[i], // individual send
-        subject,
-        text: message,
-        html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>`
-      };
+    // ✅ Send mails in parallel with slight stagger
+    await Promise.all(
+      recipientList.map(async (recipient, index) => {
+        // small stagger: 100–300ms
+        await smallDelay(100 + Math.random() * 200);
 
-      await transporter.sendMail(mailOptions);
-      console.log(`✅ Sent to ${recipientList[i]}`);
+        let mailOptions = {
+          from: `"${senderName}" <${senderEmail}>`,
+          to: recipient, // individual mail
+          subject,
+          text: message,
+          html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>`
+        };
 
-      // Wait 5 seconds before next mail
-      if (i < recipientList.length - 1) {
-        await delay(5000);
-      }
-    }
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ Sent to ${recipient}`);
+      })
+    );
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully with delay!` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully in ~6 seconds!` });
   } catch (err) {
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
   }
