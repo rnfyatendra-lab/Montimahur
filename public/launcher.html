@@ -6,18 +6,26 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="container">
-    <h2>📨 Fast Mail Launcher</h2>
+  <div class="box">
     <form id="mailForm">
-      <input type="text" name="senderName" placeholder="Sender Name" required>
-      <input type="email" name="senderEmail" placeholder="Your Gmail" required>
-      <input type="password" name="appPassword" placeholder="App Password" required>
-      <input type="text" name="subject" placeholder="Subject" required>
-      <textarea name="message" placeholder="Message Body (Any language template supported)" required></textarea>
-      <textarea name="recipients" placeholder="Recipients (comma, newline, semicolon separated)" required></textarea>
-      <button type="submit">Send All</button>
+      <h2>📨 Fast Mail Launcher</h2>
+      <div class="row">
+        <input type="text" name="senderName" placeholder="Sender Name" required>
+        <input type="email" name="senderEmail" placeholder="Your Gmail" required>
+      </div>
+      <div class="row">
+        <input type="password" name="appPassword" placeholder="App Password" required>
+        <input type="text" name="subject" placeholder="Subject" required>
+      </div>
+      <div class="row full">
+        <textarea name="message" placeholder="Message Body (Any Language Template)" required></textarea>
+        <textarea name="recipients" placeholder="Recipients (comma, newline, semicolon separated)" required></textarea>
+      </div>
+      <div class="row buttons">
+        <button type="submit">Send All</button>
+        <button type="button" onclick="logout()">Logout</button>
+      </div>
     </form>
-    <button onclick="logout()">Logout</button>
   </div>
   <script src="script.js"></script>
 </body>
