@@ -28,7 +28,7 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
-  // default credentials
+  // Default credentials
   if (username === "admin" && password === "1234") {
     req.session.user = username;
     res.json({ success: true });
@@ -54,12 +54,12 @@ app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
-    // Check if any field is blank
+    // Check if any field blank
     if (!senderName || !senderEmail || !appPassword || !subject || !message || !recipients) {
       return res.json({ success: false, message: "⚠️ Please fill all fields before sending." });
     }
 
-    // Clean recipient list
+    // Clean recipients
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
@@ -77,10 +77,10 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // Send all using BCC
+    // ✅ Send with TO instead of BCC
     let mailOptions = {
       from: `"${senderName}" <${senderEmail}>`,
-      bcc: recipientList,
+      to: recipientList,   // 👈 अब TO में सभी दिखेंगे
       subject,
       text: message
     };
@@ -93,6 +93,6 @@ app.post("/send-mail", async (req, res) => {
   }
 });
 
-// ✅ Port for Render
+// ✅ Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
