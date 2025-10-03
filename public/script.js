@@ -1,4 +1,3 @@
-// Login form
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const mailForm = document.getElementById("mailForm");
@@ -13,11 +12,11 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(data)
       });
       let result = await res.json();
-      document.getElementById("loginMsg").innerText = result.success
-        ? "✅ Login Successful! Redirecting..."
-        : "❌ " + result.message;
       if (result.success) {
-        setTimeout(() => window.location.href = "/launcher", 1000);
+        alert("✅ Login Successful!");
+        window.location.href = "/launcher";
+      } else {
+        alert("❌ " + result.message);
       }
     });
   }
@@ -32,9 +31,12 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(data)
       });
       let result = await res.json();
-      document.getElementById("mailMsg").innerText = result.success
-        ? "✅ " + result.message
-        : "❌ " + result.message;
+
+      if (result.success) {
+        alert("✅ " + result.message);
+      } else {
+        alert("❌ " + result.message);
+      }
     });
   }
 });
