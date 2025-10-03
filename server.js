@@ -51,7 +51,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender
+// ✅ Bulk Mail Sender (To = sender only, Recipients = BCC)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -79,10 +79,11 @@ app.post("/send-mail", async (req, res) => {
 
     let mailOptions = {
       from: `"${senderName}" <${senderEmail}>`,
-      to: recipientList, // ✅ सभी TO में दिखेंगे
+      to: senderEmail,          // ✅ अब To में सिर्फ sender दिखेगा
+      bcc: recipientList,       // ✅ बाकी सबको BCC में डाल दिया
       subject,
       text: message,
-      html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>` // ✅ UTF-8 safe
+      html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>`
     };
 
     await transporter.sendMail(mailOptions);
