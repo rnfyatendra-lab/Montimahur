@@ -1,125 +1,154 @@
-// server.js
-require('dotenv').config();
-const express = require('express');
-const session = require('express-session');
-const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
-const path = require('path');
+import express from "express";
+import session from "express-session";
+import helmet from "helmet";
+import path from "path";
+import { fileURLToPath } from "url";
+import bodyParser from "body-parser";
+import sgMail from "@sendgrid/mail";
+import dotenv from "dotenv";
 
+dotenv.config();
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-const PORT = process.env.PORT || 8080;
 
-// 🔑 Hardcoded login
-const HARD_USERNAME = "Yatendra Rajput";
-const HARD_PASSWORD = "Yattu@882";
-
-// Middleware
+app.use(helmet());
+app.use(bodyParser.json({ limit: "1mb" }));
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());
-app.use(express.static(path.join(__dirname, 'public')));
 
+// Use a secure session store in production (Redis/etc). This is for demo.
+const SESSION_SECRET = process.env.SESSION_SECRET || "dev-secret";
 app.use(session({
-  secret: 'bulk-mailer-secret',
+  secret: SESSION_SECRET,
   resave: false,
-  saveUninitialized: true
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    maxAge: 1000 * 60 * 60 // 1 hour
+  }
 }));
 
-// 🔒 Auth middleware
-function requireAuth(req, res, next) {
-  if (req.session.user) return next();
-  return res.redirect('/');
+app.use(express.static(path.join(__dirname, "public")));
+
+// Helper: require login middleware
+function requireLogin(req, res, next) {
+  if (!req.session || !req.session.sendgridKey || !req.session.senderEmail) {
+    return res.status(401).json({ success: false, error: "Not authenticated" });
+  }
+  // set sgMail apiKey dynamically for this request
+  sgMail.setApiKey(req.session.sendgridKey);
+  next();
 }
 
-// Routes
-app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'login.html'));
-});
-
-app.post('/login', (req, res) => {
-  const { username, password } = req.body;
-  if (username === HARD_USERNAME && password === HARD_PASSWORD) {
-    req.session.user = username;
-    return res.json({ success: true });
+// Login route - stores sendgrid API key and sender email in session
+app.post("/api/login", (req, res) => {
+  const { apiKey, senderEmail } = req.body;
+  if (!apiKey || !senderEmail) {
+    return res.status(400).json({ success: false, error: "apiKey and senderEmail required" });
   }
-  return res.json({ success: false, message: "❌ Invalid credentials" });
-});
 
-app.get('/launcher', requireAuth, (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'launcher.html'));
-});
+  // lightweight validation
+  if (typeof senderEmail !== "string" || !senderEmail.includes("@")) {
+    return res.status(400).json({ success: false, error: "Invalid senderEmail" });
+  }
 
-app.post('/logout', (req, res) => {
-  req.session.destroy(() => {
-    res.clearCookie('connect.sid');
+  // save in session (for demo). In prod use encrypted store.
+  req.session.sendgridKey = apiKey;
+  req.session.senderEmail = senderEmail;
+  req.session.save(err => {
+    if (err) return res.status(500).json({ success: false, error: "Session save failed" });
     return res.json({ success: true });
   });
 });
 
-// Helper function for delay
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
+// Logout
+app.post("/api/logout", (req, res) => {
+  req.session.destroy(err => {
+    if (err) return res.status(500).json({ success: false, error: "Logout failed" });
+    res.clearCookie("connect.sid");
+    return res.json({ success: true });
+  });
+});
 
-// Helper function for batch sending
-async function sendBatch(transporter, mails, batchSize = 5) {
-  const results = [];
-  for (let i = 0; i < mails.length; i += batchSize) {
-    const batch = mails.slice(i, i + batchSize);
-    const promises = batch.map(mail => transporter.sendMail(mail));
-    const settled = await Promise.allSettled(promises);
-    results.push(...settled);
-
-    // Small pause between batches to avoid Gmail rate-limit
-    await delay(200); // 0.2 sec pause
+// Check auth
+app.get("/api/me", (req, res) => {
+  if (req.session && req.session.senderEmail) {
+    return res.json({ authenticated: true, senderEmail: req.session.senderEmail });
   }
-  return results;
-}
+  return res.json({ authenticated: false });
+});
 
-// ✅ Bulk Mail Sender with fast batch sending
-app.post('/send', requireAuth, async (req, res) => {
+// Bulk send endpoint — requireLogin
+app.post("/api/send-bulk", requireLogin, async (req, res) => {
   try {
-    const { senderName, email, password, recipients, subject, message } = req.body;
-    if (!email || !password || !recipients) {
-      return res.json({ success: false, message: "Email, password and recipients required" });
+    const { subject, html, recipients, batchSize = 100, concurrency = 4 } = req.body;
+
+    if (!Array.isArray(recipients) || recipients.length === 0) {
+      return res.status(400).json({ success: false, error: "recipients array required" });
     }
 
-    const recipientList = recipients
-      .split(/[\n,]+/)
-      .map(r => r.trim())
-      .filter(r => r);
+    // Basic validation/sanitization
+    const cleanRecipients = recipients
+      .map(r => typeof r === "string" ? r.trim() : "")
+      .filter(r => r && r.includes("@"));
 
-    if (recipientList.length === 0) {
-      return res.json({ success: false, message: "No valid recipients" });
+    if (cleanRecipients.length === 0) {
+      return res.status(400).json({ success: false, error: "No valid recipients provided" });
     }
 
-    // ✅ Single transporter
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 465,
-      secure: true,
-      auth: { user: email, pass: password }
-    });
+    // Use batching to avoid huge payloads. SendGrid rate/limits depend on plan.
+    const batches = [];
+    for (let i = 0; i < cleanRecipients.length; i += batchSize) {
+      batches.push(cleanRecipients.slice(i, i + batchSize));
+    }
 
-    // Prepare mails
-    const mails = recipientList.map(r => ({
-      from: "${senderName || 'Anonymous'}" <${email}>,
-      to: r,
-      subject: subject || "No Subject",
-      text: message || ""
-    }));
+    let totalSent = 0;
+    // process batches with limited concurrency
+    for (let i = 0; i < batches.length; i += concurrency) {
+      const chunk = batches.slice(i, i + concurrency);
 
-    // Send mails in batches (parallel within batch)
-    await sendBatch(transporter, mails, 5); // 5 mails parallel
+      // each batch -> create a single send request containing multiple personalizations
+      const promises = chunk.map(batchRecipients => {
+        // build personalizations: send a single message with multiple 'to' recipients
+        const msg = {
+          personalizations: [
+            {
+              to: batchRecipients.map(r => ({ email: r })),
+              subject: subject || "(no subject)"
+            }
+          ],
+          from: { email: req.session.senderEmail },
+          content: [{ type: "text/html", value: html || "" }]
+        };
+        return sgMail.send(msg);
+      });
 
-    return res.json({ success: true, message: ✅ Mail sent to ${recipientList.length} });
+      // await all promises in this concurrency window
+      const results = await Promise.allSettled(promises);
+      results.forEach(r => {
+        if (r.status === "fulfilled") {
+          // SendGrid returns array or object — we count success as batch size
+          // conservative: count successes as batchSize for this promise
+          totalSent += batchSize; // approximate; adapt if you want exact tracking using webhooks
+        } else {
+          console.error("Send error for a batch:", r.reason);
+        }
+      });
+    }
+
+    return res.json({ success: true, sentApprox: cleanRecipients.length, note: "sent (approx). Use webhooks for exact delivery/bounces." });
 
   } catch (err) {
-    console.error("Send error:", err);
-    return res.json({ success: false, message: err.message });
+    console.error("Bulk send error:", err);
+    return res.status(500).json({ success: false, error: err.message || "Send failed" });
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(🚀 Server running on port ${PORT});
+// Fallback: serve dashboard
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`✅ Fast Paid Mailer running on ${PORT}`));
