@@ -30,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(mailForm).entries());
 
-      // Check blank fields
       if (!data.senderName || !data.senderEmail || !data.appPassword || !data.subject || !data.message || !data.recipients) {
         alert("⚠️ Please fill all fields!");
         return;
@@ -48,11 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await res.json();
 
-      if (result.success) {
-        alert(result.message);
-      } else {
-        alert(result.message);
-      }
+      alert(result.message);
 
       sendBtn.disabled = false;
       sendBtn.innerText = "Send All";
