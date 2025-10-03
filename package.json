@@ -1,7 +1,7 @@
 {
-  "name": "fast-mail-launcher",
+  "name": "bulk-mail-launcher",
   "version": "1.0.0",
-  "description": "Bulk Mail Sender with Login (Render Ready)",
+  "description": "Bulk Mail Sender with Login",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
