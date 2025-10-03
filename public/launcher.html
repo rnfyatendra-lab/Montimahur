@@ -7,8 +7,8 @@
 </head>
 <body>
   <div class="box">
-    <h2>📨 Bulk Mail Launcher</h2>
     <form id="mailForm">
+      <h2>📨 Bulk Mail Launcher</h2>
       <input type="text" name="senderName" placeholder="Sender Name" required>
       <input type="email" name="senderEmail" placeholder="Your Gmail" required>
       <input type="password" name="appPassword" placeholder="App Password" required>
@@ -17,8 +17,10 @@
       <textarea name="recipients" placeholder="Recipients (comma separated)" required></textarea>
       <button type="submit">Send Bulk</button>
     </form>
-    <button onclick="logout()">Logout</button>
-    <p id="mailMsg"></p>
+
+    <div class="sidebar">
+      <button onclick="logout()">Logout</button>
+    </div>
   </div>
   <script src="script.js"></script>
 </body>
