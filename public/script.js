@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ Mail form handler
+  // ✅ Mail handler
   if (mailForm) {
     mailForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -36,6 +36,10 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
+      const sendBtn = mailForm.querySelector("button[type='submit']");
+      sendBtn.disabled = true;
+      sendBtn.innerText = "Sending..."; // 👈 Sending दिखेगा
+
       const res = await fetch("/send-mail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -45,11 +49,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await res.json();
 
       if (result.success) {
-        alert(result.message); // ✅ Popup success
-        // ❌ mailForm.reset() हटा दिया → details अब बनी रहेंगी
+        alert(result.message);
       } else {
-        alert(result.message); // ❌ Popup error
+        alert(result.message);
       }
+
+      sendBtn.disabled = false;
+      sendBtn.innerText = "Send All"; // 👈 वापस Send All
     });
   }
 });
