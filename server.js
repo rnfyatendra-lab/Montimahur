@@ -28,7 +28,6 @@ app.get("/", (req, res) => {
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
-  // Updated credentials
   const AUTH_USER = "Lodhiyatendra";
   const AUTH_PASS = "lodhi882@#";
 
@@ -52,7 +51,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender with UTF-8 templates
+// ✅ Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -80,10 +79,10 @@ app.post("/send-mail", async (req, res) => {
 
     let mailOptions = {
       from: `"${senderName}" <${senderEmail}>`,
-      to: recipientList, // ✅ TO में सभी दिखेंगे
-      subject: subject,
-      text: message,     // Plain text (works for all languages)
-      html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>` // ✅ HTML भी UTF-8 safe
+      to: recipientList, // ✅ सभी TO में दिखेंगे
+      subject,
+      text: message,
+      html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>` // ✅ UTF-8 safe
     };
 
     await transporter.sendMail(mailOptions);
