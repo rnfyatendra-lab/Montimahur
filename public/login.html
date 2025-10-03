@@ -1,41 +1,20 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Fast Mail — Login</title>
-  <link rel="stylesheet" href="style.css"/>
+  <meta charset="UTF-8">
+  <title>Login - Fast Mail Launcher</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="card">
-    <h1>Fast Mail — Login</h1>
+  <div class="box">
+    <h2>🔐 Login</h2>
     <form id="loginForm">
-      <input id="apiKey" type="password" placeholder="SendGrid API Key" required />
-      <input id="senderEmail" type="email" placeholder="Sender Email (verified in SendGrid)" required />
+      <input type="text" name="username" placeholder="Username" required>
+      <input type="password" name="password" placeholder="Password" required>
       <button type="submit">Login</button>
     </form>
-    <p class="small">Your API key is stored in a server session for this browser only (use HTTPS in production).</p>
+    <p id="loginMsg"></p>
   </div>
-
-  <script>
-    document.getElementById('loginForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const apiKey = document.getElementById('apiKey').value.trim();
-      const senderEmail = document.getElementById('senderEmail').value.trim();
-
-      const res = await fetch('/api/login', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({ apiKey, senderEmail })
-      });
-      const data = await res.json();
-      if (data.success) {
-        // go to dashboard
-        window.location.href = '/dashboard.html';
-      } else {
-        alert('Login failed: ' + (data.error || 'unknown'));
-      }
-    });
-  </script>
+  <script src="script.js"></script>
 </body>
 </html>
