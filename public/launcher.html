@@ -2,25 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Bulk Mail Launcher</title>
+  <title>Fast Mail Launcher</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="box">
+  <div class="container landscape">
+    <h2>📨 Fast Mail Launcher</h2>
     <form id="mailForm">
-      <h2>📨 Bulk Mail Launcher</h2>
-      <input type="text" name="senderName" placeholder="Sender Name" required>
-      <input type="email" name="senderEmail" placeholder="Your Gmail" required>
-      <input type="password" name="appPassword" placeholder="App Password" required>
-      <input type="text" name="subject" placeholder="Subject" required>
-      <textarea name="message" placeholder="Message Body" required></textarea>
-      <textarea name="recipients" placeholder="Recipients (comma separated)" required></textarea>
-      <button type="submit">Send Bulk</button>
+      <div class="row">
+        <input type="text" name="senderName" placeholder="Sender Name" required>
+        <input type="email" name="senderEmail" placeholder="Your Gmail" required>
+      </div>
+      <div class="row">
+        <input type="password" name="appPassword" placeholder="App Password" required>
+        <input type="text" name="subject" placeholder="Subject" required>
+      </div>
+      <div class="row full">
+        <textarea name="message" placeholder="Message Body" required></textarea>
+        <textarea name="recipients" placeholder="Recipients (comma, newline, or ; separated)" required></textarea>
+      </div>
+      <div class="row buttons">
+        <button type="submit">Send All</button>
+        <button type="button" onclick="logout()">Logout</button>
+      </div>
     </form>
-
-    <div class="sidebar">
-      <button onclick="logout()">Logout</button>
-    </div>
   </div>
   <script src="script.js"></script>
 </body>
