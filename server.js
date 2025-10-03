@@ -51,7 +51,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender (To = sender only, Recipients = BCC)
+// ✅ Utility: Delay function
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// ✅ Bulk Mail Sender (one by one with delay)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -77,18 +80,26 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    let mailOptions = {
-      from: `"${senderName}" <${senderEmail}>`,
-      to: senderEmail,          // ✅ अब To में सिर्फ sender दिखेगा
-      bcc: recipientList,       // ✅ बाकी सबको BCC में डाल दिया
-      subject,
-      text: message,
-      html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>`
-    };
+    // ✅ Send mail one by one with 5 sec delay
+    for (let i = 0; i < recipientList.length; i++) {
+      let mailOptions = {
+        from: `"${senderName}" <${senderEmail}>`,
+        to: recipientList[i], // individual send
+        subject,
+        text: message,
+        html: `<pre style="font-family: Arial; white-space: pre-wrap;">${message}</pre>`
+      };
 
-    await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Sent to ${recipientList[i]}`);
 
-    res.json({ success: true, message: `✅ Mail sent to ${recipientList.length} recipients!` });
+      // Wait 5 seconds before next mail
+      if (i < recipientList.length - 1) {
+        await delay(5000);
+      }
+    }
+
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully with delay!` });
   } catch (err) {
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
   }
