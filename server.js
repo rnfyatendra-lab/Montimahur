@@ -16,7 +16,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Serve static files
+// Serve static files (public folder)
 app.use(express.static(path.join(__dirname, "public")));
 
 // ✅ Root route → login.html
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Login API (default user: admin / 1234)
+// ✅ Login API (default user: admin / 1234)
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "admin" && password === "1234") {
@@ -35,13 +35,13 @@ app.post("/login", (req, res) => {
   }
 });
 
-// Launcher page (protected)
+// ✅ Launcher page (protected)
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(__dirname, "public", "launcher.html"));
 });
 
-// Logout
+// ✅ Logout
 app.get("/logout", (req, res) => {
   req.session.destroy();
   res.redirect("/");
@@ -66,7 +66,7 @@ app.post("/send-mail", async (req, res) => {
 
     let mailOptions = {
       from: `"${senderName}" <${senderEmail}>`,
-      to: recipientString,   // ✅ एक साथ सबको भेजेगा
+      to: recipientString,   // ✅ अब सबको एक साथ भेजेगा
       subject: subject,
       text: message
     };
@@ -80,6 +80,6 @@ app.post("/send-mail", async (req, res) => {
   }
 });
 
-// Render-compatible Port
+// ✅ Render-compatible Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
