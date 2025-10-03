@@ -1,13 +1,20 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
+  const mailForm = document.getElementById("mailForm");
 
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (e) => {
+  if (mailForm) {
+    mailForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
-      const data = Object.fromEntries(new FormData(loginForm).entries());
+      // form values
+      const data = Object.fromEntries(new FormData(mailForm).entries());
 
-      const res = await fetch("/login", {
+      // ✅ check if any field empty
+      if (!data.senderName || !data.senderEmail || !data.appPassword || !data.subject || !data.message || !data.recipients) {
+        alert("⚠️ Please fill all fields before sending!");
+        return;
+      }
+
+      const res = await fetch("/send-mail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
@@ -16,12 +23,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await res.json();
 
       if (result.success) {
-        document.getElementById("loginMsg").innerText = "✅ Login successful! Redirecting...";
-        setTimeout(() => {
-          window.location.href = "/launcher";
-        }, 1000);
+        alert("✅ " + result.message); // success popup
+        mailForm.reset(); // ✅ clear form after send
       } else {
-        document.getElementById("loginMsg").innerText = "❌ " + result.message;
+        alert("❌ " + result.message);
       }
     });
   }
