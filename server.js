@@ -77,7 +77,7 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // Send all using BCC (hides emails)
+    // Send all using BCC
     let mailOptions = {
       from: `"${senderName}" <${senderEmail}>`,
       bcc: recipientList,
