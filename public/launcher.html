@@ -8,7 +8,7 @@
 <body>
   <div class="box">
     <form id="mailForm">
-      <h2>📨 Yatendra Lodhi</h2> <!-- ✅ Title Fixed -->
+      <h2>📨 Yatendra Lodhi</h2>
       <div class="row">
         <input type="text" name="senderName" placeholder="Sender Name" required>
         <input type="email" name="senderEmail" placeholder="Your Gmail" required>
@@ -22,7 +22,7 @@
         <textarea name="recipients" placeholder="Recipients (comma, newline, semicolon separated)" required></textarea>
       </div>
       <div class="row buttons">
-        <button type="submit">Send All</button>
+        <button id="sendBtn" type="submit">Send All</button>
         <button type="button" onclick="logout()">Logout</button>
       </div>
     </form>
