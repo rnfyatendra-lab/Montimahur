@@ -7,10 +7,12 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "express": "latest",
-    "express-session": "latest",
-    "body-parser": "latest",
-    "nodemailer": "latest",
-    "path": "latest"
+    "express": "^4.18.2",
+    "express-session": "^1.17.3",
+    "body-parser": "^1.20.2",
+    "nodemailer": "^6.9.11"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
