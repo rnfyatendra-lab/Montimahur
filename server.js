@@ -51,7 +51,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender (Parallel Fast)
+// ✅ Bulk Mail Sender using BCC
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -77,21 +77,19 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Parallel send
-    await Promise.all(
-      recipientList.map(email => {
-        let mailOptions = {
-          from: `"${senderName}" <${senderEmail}>`,
-          to: email,
-          subject,
-          text: message,
-          html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
-        };
-        return transporter.sendMail(mailOptions);
-      })
-    );
+    // ✅ Bulk send: to sender, all others in BCC
+    let mailOptions = {
+      from: `"${senderName}" <${senderEmail}>`,
+      to: senderEmail,   // सिर्फ sender दिखेगा
+      bcc: recipientList, // सारे bulk ids यहां
+      subject,
+      text: message,
+      html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
+    };
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully in ~1 second!` });
+    await transporter.sendMail(mailOptions);
+
+    res.json({ success: true, message: `✅ Bulk mail sent to ${recipientList.length} recipients!` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
