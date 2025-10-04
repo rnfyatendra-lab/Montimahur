@@ -53,10 +53,10 @@ app.get("/logout", (req, res) => {
 // Super fast delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Bulk Mail Sender
+// Bulk Mail Sender (Gmail Only, first line fix)
 app.post("/send-mail", async (req, res) => {
   try {
-    const { senderName, senderEmail, appPassword, subject, message, recipients, provider } = req.body;
+    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
     if (!senderName || !senderEmail || !appPassword || !subject || !message || !recipients) {
       return res.json({ success: false, message: "⚠️ Please fill all fields before sending." });
@@ -71,30 +71,17 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipient emails found." });
     }
 
-    // ✅ Transporter: SendGrid OR Gmail
-    let transporter;
-    if (provider === "sendgrid") {
-      transporter = nodemailer.createTransport({
-        host: "smtp.sendgrid.net",
-        port: 587,
-        secure: false,
-        auth: {
-          user: "apikey",        // fixed
-          pass: appPassword      // SendGrid API Key
-        }
-      });
-    } else {
-      transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: senderEmail,
-          pass: appPassword      // Gmail App Password
-        }
-      });
-    }
+    // ✅ Gmail SMTP Transporter
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: senderEmail,
+        pass: appPassword // Gmail App Password (16 digit)
+      }
+    });
 
-    // ✅ Fix: Remove leading/trailing blank lines
-    const cleanMessage = message.replace(/^\s+/, "").replace(/\s+$/, "");
+    // ✅ Remove blank lines & leading spaces at start
+    const cleanMessage = message.replace(/^\s*\n/, "").replace(/^\s+/, "").replace(/\s+$/, "");
 
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
@@ -106,7 +93,7 @@ app.post("/send-mail", async (req, res) => {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage,
+        text: plainMessage, // exact template text
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
                </div>`
@@ -116,7 +103,7 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(10); // super fast
+        await delay(10); // super fast sending
       }
     }
 
