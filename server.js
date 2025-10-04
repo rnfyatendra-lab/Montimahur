@@ -50,10 +50,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay for fast bulk (~30ms each)
+// ✅ Delay for bulk speed (~30ms per mail)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ✅ Bulk Mail Sender (each recipient gets own "To")
+// ✅ Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -80,23 +80,31 @@ app.post("/send-mail", async (req, res) => {
     });
 
     for (let i = 0; i < recipientList.length; i++) {
+      const recipient = recipientList[i];
+
+      // ✅ Body with recipient email injected
+      const customMessage = `Hi there. "${recipient}"\n\n${message}`;
+
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
-        to: recipientList[i],   // ✅ Each mail shows current recipient
+        to: recipient,   // each recipient in To
         subject,
-        text: message,
-        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
+        text: customMessage,
+        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">
+                 Hi there. "<b>${recipient}</b>"<br><br>
+                 ${message.replace(/\n/g, "<br>")}
+               </div>`
       };
 
       await transporter.sendMail(mailOptions);
-      console.log(`✅ Sent to ${recipientList[i]}`);
+      console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(30); // fast delay
+        await delay(30);
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (each mail shows its own To:)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (with recipient ID inside message)` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
