@@ -53,7 +53,7 @@ app.get("/logout", (req, res) => {
 // Super fast delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Bulk Mail Sender (Gmail Only, first line fix)
+// Bulk Mail Sender (Gmail Only, first line flush fix)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -76,12 +76,12 @@ app.post("/send-mail", async (req, res) => {
       service: "gmail",
       auth: {
         user: senderEmail,
-        pass: appPassword // Gmail App Password (16 digit)
+        pass: appPassword // Gmail App Password (16-digit)
       }
     });
 
-    // ✅ Remove blank lines & leading spaces at start
-    const cleanMessage = message.replace(/^\s*\n/, "").replace(/^\s+/, "").replace(/\s+$/, "");
+    // ✅ Clean message → remove leading blank lines + spaces
+    const cleanMessage = message.replace(/^\s*\n/, "").trimStart();
 
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
@@ -93,7 +93,7 @@ app.post("/send-mail", async (req, res) => {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage, // exact template text
+        text: plainMessage, // plain text exact
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
                </div>`
@@ -103,7 +103,7 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(10); // super fast sending
+        await delay(10); // super fast
       }
     }
 
