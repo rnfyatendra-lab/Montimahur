@@ -51,10 +51,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay (~20ms → 30 mails ≈ 1–2 sec)
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// ✅ Bulk Mail Sender
+// ✅ Bulk Mail Sender (Parallel Fast)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -80,24 +77,21 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    for (let i = 0; i < recipientList.length; i++) {
-      let mailOptions = {
-        from: `"${senderName}" <${senderEmail}>`,
-        to: recipientList[i],
-        subject,
-        text: message,
-        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
-      };
+    // ✅ Parallel send
+    await Promise.all(
+      recipientList.map(email => {
+        let mailOptions = {
+          from: `"${senderName}" <${senderEmail}>`,
+          to: email,
+          subject,
+          text: message,
+          html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
+        };
+        return transporter.sendMail(mailOptions);
+      })
+    );
 
-      await transporter.sendMail(mailOptions);
-      console.log(`✅ Sent to ${recipientList[i]}`);
-
-      if (i < recipientList.length - 1) {
-        await delay(20); // super fast: 30 mails ≈ 1–2 sec
-      }
-    }
-
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully in ~1–2 seconds!` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully in ~1 second!` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
