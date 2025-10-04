@@ -50,10 +50,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay (20ms for fast bulk)
+// ✅ Delay for fast bulk
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ✅ Bulk Mail Sender
+// ✅ Bulk Mail Sender (Inbox Safe)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -82,26 +82,15 @@ app.post("/send-mail", async (req, res) => {
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
 
-      // ✅ Clean message with recipient email included
-      const customText = `Hi there. "${recipient}"\n\n${message}`;
-      const customHtml = `
-        <div style="font-family: Arial, sans-serif; white-space: pre-wrap; line-height:1.5; color:#000;">
-          Hi there. "${recipient}"<br><br>
-          ${message.replace(/\n/g, "<br>")}
-        </div>
-      `;
-
+      // ✅ Clean plain text mail
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
-        to: recipient,    // ✅ Each recipient in To
+        to: recipient,   // each mail goes individually
         subject,
-        text: customText, // ✅ Plain text for inbox safety
-        html: customHtml, // ✅ HTML version
+        text: message,   // plain text only → inbox safe
         headers: {
           "X-Priority": "3",
-          "X-MSMail-Priority": "Normal",
-          "X-Mailer": "NodeMailer",
-          "Disposition-Notification-To": senderEmail
+          "X-MSMail-Priority": "Normal"
         }
       };
 
@@ -109,7 +98,7 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(20); // very fast sending
+        await delay(20); // fast: 30 mails ~1 sec
       }
     }
 
