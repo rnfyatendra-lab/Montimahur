@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// ✅ Login (updated credentials)
+// ✅ Login (credentials updated)
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
@@ -39,7 +39,7 @@ app.post("/login", (req, res) => {
   }
 });
 
-// ✅ Launcher
+// ✅ Launcher page
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(__dirname, "public", "launcher.html"));
@@ -51,10 +51,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay function (fast send ~50ms)
+// ✅ Delay (50ms per mail)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ✅ Bulk Mail Sender (one by one with fast delay)
+// ✅ Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -93,7 +93,7 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipientList[i]}`);
 
       if (i < recipientList.length - 1) {
-        await delay(50); // fast delay
+        await delay(50); // fast delay ~50ms
       }
     }
 
