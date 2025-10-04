@@ -50,10 +50,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// Delay function
+// Delay for super-fast bulk (~10ms per mail)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Bulk Mail Sender (Inbox Safe)
+// Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -82,13 +82,17 @@ app.post("/send-mail", async (req, res) => {
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
 
+      // ✅ Preserve exact formatting of template
+      const plainMessage = message; // no changes
+      const htmlMessage = message.replace(/\n/g, "<br>");
+
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
-        to: recipient,   // each mail shows its own recipient
+        to: recipient,
         subject,
-        text: message,   // plain text only
-        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap; color:#000; line-height:1.5;">
-                 ${message.replace(/\n/g, "<br>")}
+        text: plainMessage, // plain text → preserves exact lines
+        html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
+                 ${htmlMessage}
                </div>`,
         headers: {
           "X-Priority": "3",
@@ -100,11 +104,11 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(20); // fast send
+        await delay(10); // super fast
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (Inbox Optimized)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (super fast, template preserved)` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
