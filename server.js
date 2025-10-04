@@ -80,7 +80,6 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Send mails with ~50ms delay (fast)
     for (let i = 0; i < recipientList.length; i++) {
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
