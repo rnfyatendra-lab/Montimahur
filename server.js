@@ -16,7 +16,7 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Serve static files
+// Static files
 app.use(express.static(path.join(__dirname, "public")));
 
 // ✅ Root route → login.html
@@ -27,7 +27,6 @@ app.get("/", (req, res) => {
 // ✅ Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-
   const AUTH_USER = "Lodhiyatendra";
   const AUTH_PASS = "lodhi882@#";
 
@@ -51,7 +50,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender (Sender Email always in "To")
+// ✅ Delay for fast bulk (~30ms each)
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// ✅ Bulk Mail Sender (each recipient gets own "To")
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -77,19 +79,24 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Fix: "To" में हमेशा sender email, बाकी सबको BCC
-    let mailOptions = {
-      from: `"${senderName}" <${senderEmail}>`,
-      to: senderEmail,       // 👈 हमेशा sender दिखेगा
-      bcc: recipientList,    // 👈 बाकी सबको bulk में भेजो
-      subject,
-      text: message,
-      html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
-    };
+    for (let i = 0; i < recipientList.length; i++) {
+      let mailOptions = {
+        from: `"${senderName}" <${senderEmail}>`,
+        to: recipientList[i],   // ✅ Each mail shows current recipient
+        subject,
+        text: message,
+        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
+      };
 
-    await transporter.sendMail(mailOptions);
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Sent to ${recipientList[i]}`);
 
-    res.json({ success: true, message: `✅ Bulk mail sent to ${recipientList.length} recipients! (To: ${senderEmail})` });
+      if (i < recipientList.length - 1) {
+        await delay(30); // fast delay
+      }
+    }
+
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (each mail shows its own To:)` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
