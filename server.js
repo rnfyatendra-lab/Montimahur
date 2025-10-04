@@ -19,12 +19,12 @@ app.use(session({
 // Static files
 app.use(express.static(path.join(__dirname, "public")));
 
-// ✅ Root route → login.html
+// Root route → login.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// ✅ Login
+// Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   const AUTH_USER = "Lodhiyatendra";
@@ -38,22 +38,22 @@ app.post("/login", (req, res) => {
   }
 });
 
-// ✅ Launcher
+// Launcher
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(__dirname, "public", "launcher.html"));
 });
 
-// ✅ Logout
+// Logout
 app.get("/logout", (req, res) => {
   req.session.destroy();
   res.redirect("/");
 });
 
-// ✅ Delay for fast bulk
+// Delay function
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ✅ Bulk Mail Sender (Inbox Safe)
+// Bulk Mail Sender (Inbox Safe)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -82,12 +82,14 @@ app.post("/send-mail", async (req, res) => {
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
 
-      // ✅ Clean plain text mail
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
-        to: recipient,   // each mail goes individually
+        to: recipient,   // each mail shows its own recipient
         subject,
-        text: message,   // plain text only → inbox safe
+        text: message,   // plain text only
+        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap; color:#000; line-height:1.5;">
+                 ${message.replace(/\n/g, "<br>")}
+               </div>`,
         headers: {
           "X-Priority": "3",
           "X-MSMail-Priority": "Normal"
@@ -98,17 +100,17 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(20); // fast: 30 mails ~1 sec
+        await delay(20); // fast send
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (Inbox optimized)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (Inbox Optimized)` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
   }
 });
 
-// ✅ Port
+// Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
