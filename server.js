@@ -51,7 +51,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender using BCC
+// ✅ Bulk Mail Sender (Sender Email always in "To")
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -77,11 +77,11 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Bulk send: to sender, all others in BCC
+    // ✅ Fix: "To" में हमेशा sender email, बाकी सबको BCC
     let mailOptions = {
       from: `"${senderName}" <${senderEmail}>`,
-      to: senderEmail,   // सिर्फ sender दिखेगा
-      bcc: recipientList, // सारे bulk ids यहां
+      to: senderEmail,       // 👈 हमेशा sender दिखेगा
+      bcc: recipientList,    // 👈 बाकी सबको bulk में भेजो
       subject,
       text: message,
       html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
@@ -89,7 +89,7 @@ app.post("/send-mail", async (req, res) => {
 
     await transporter.sendMail(mailOptions);
 
-    res.json({ success: true, message: `✅ Bulk mail sent to ${recipientList.length} recipients!` });
+    res.json({ success: true, message: `✅ Bulk mail sent to ${recipientList.length} recipients! (To: ${senderEmail})` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
