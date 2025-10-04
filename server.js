@@ -50,7 +50,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay for bulk speed (~30ms per mail)
+// ✅ Delay (20ms for fast bulk)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ✅ Bulk Mail Sender
@@ -82,29 +82,38 @@ app.post("/send-mail", async (req, res) => {
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
 
-      // ✅ Body with recipient email injected
-      const customMessage = `Hi there. "${recipient}"\n\n${message}`;
+      // ✅ Clean message with recipient email included
+      const customText = `Hi there. "${recipient}"\n\n${message}`;
+      const customHtml = `
+        <div style="font-family: Arial, sans-serif; white-space: pre-wrap; line-height:1.5; color:#000;">
+          Hi there. "${recipient}"<br><br>
+          ${message.replace(/\n/g, "<br>")}
+        </div>
+      `;
 
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
-        to: recipient,   // each recipient in To
+        to: recipient,    // ✅ Each recipient in To
         subject,
-        text: customMessage,
-        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">
-                 Hi there. "<b>${recipient}</b>"<br><br>
-                 ${message.replace(/\n/g, "<br>")}
-               </div>`
+        text: customText, // ✅ Plain text for inbox safety
+        html: customHtml, // ✅ HTML version
+        headers: {
+          "X-Priority": "3",
+          "X-MSMail-Priority": "Normal",
+          "X-Mailer": "NodeMailer",
+          "Disposition-Notification-To": senderEmail
+        }
       };
 
       await transporter.sendMail(mailOptions);
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(30);
+        await delay(20); // very fast sending
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (with recipient ID inside message)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (Inbox optimized)` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
