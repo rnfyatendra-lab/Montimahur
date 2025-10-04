@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   const loginForm = document.getElementById("loginForm");
   const mailForm = document.getElementById("mailForm");
+  const sendBtn = document.getElementById("sendBtn");
 
   // ✅ Login handler
   if (loginForm) {
@@ -35,8 +36,8 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const sendBtn = mailForm.querySelector("button[type='submit']");
       sendBtn.disabled = true;
+      sendBtn.style.background = "red";
       sendBtn.innerText = "Sending...";
 
       const res = await fetch("/send-mail", {
@@ -50,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(result.message);
 
       sendBtn.disabled = false;
+      sendBtn.style.background = "#4285f4";
       sendBtn.innerText = "Send All";
     });
   }
