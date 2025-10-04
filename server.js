@@ -51,7 +51,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay (~50ms → 30 mails in ~2–3 sec)
+// ✅ Delay (~30ms)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ✅ Bulk Mail Sender
@@ -93,7 +93,7 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipientList[i]}`);
 
       if (i < recipientList.length - 1) {
-        await delay(50); // fast: 30 mails ~2–3 sec
+        await delay(30); // fast: 30 mails ~1–2 sec
       }
     }
 
