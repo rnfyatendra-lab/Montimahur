@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// ✅ Login (credentials updated)
+// ✅ Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
@@ -51,7 +51,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay function (~100ms)
+// ✅ Delay (~50ms → 30 mails in ~2–3 sec)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 // ✅ Bulk Mail Sender
@@ -93,11 +93,11 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipientList[i]}`);
 
       if (i < recipientList.length - 1) {
-        await delay(100); // ~30 mails in 3 sec
+        await delay(50); // fast: 30 mails ~2–3 sec
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully in ~3–4 seconds!` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully in ~2–3 seconds!` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
