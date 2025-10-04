@@ -51,10 +51,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Delay function (200ms between mails)
+// ✅ Delay function (fast send ~50ms)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// ✅ Bulk Mail Sender (one by one with small delay)
+// ✅ Bulk Mail Sender (one by one with fast delay)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -80,7 +80,7 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Send mails one by one with small delay
+    // ✅ Send mails with ~50ms delay (fast)
     for (let i = 0; i < recipientList.length; i++) {
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
@@ -93,9 +93,8 @@ app.post("/send-mail", async (req, res) => {
       await transporter.sendMail(mailOptions);
       console.log(`✅ Sent to ${recipientList[i]}`);
 
-      // Small delay (200ms) before next mail
       if (i < recipientList.length - 1) {
-        await delay(200);
+        await delay(50); // fast delay
       }
     }
 
