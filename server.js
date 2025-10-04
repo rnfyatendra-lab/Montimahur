@@ -53,10 +53,10 @@ app.get("/logout", (req, res) => {
 // Super fast delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Bulk Mail Sender (first line fix)
+// Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
-    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
+    const { senderName, senderEmail, appPassword, subject, message, recipients, provider } = req.body;
 
     if (!senderName || !senderEmail || !appPassword || !subject || !message || !recipients) {
       return res.json({ success: false, message: "⚠️ Please fill all fields before sending." });
@@ -71,18 +71,30 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipient emails found." });
     }
 
-    // ✅ Trim leading/trailing blank lines and spaces
-    const cleanMessage = message.replace(/^\s+/, "").replace(/\s+$/, "");
+    // ✅ Transporter: SendGrid OR Gmail
+    let transporter;
+    if (provider === "sendgrid") {
+      transporter = nodemailer.createTransport({
+        host: "smtp.sendgrid.net",
+        port: 587,
+        secure: false,
+        auth: {
+          user: "apikey",        // fixed
+          pass: appPassword      // SendGrid API Key
+        }
+      });
+    } else {
+      transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: senderEmail,
+          pass: appPassword      // Gmail App Password
+        }
+      });
+    }
 
-    let transporter = nodemailer.createTransport({
-      host: "smtp.sendgrid.net", // SendGrid SMTP
-      port: 587,
-      secure: false,
-      auth: {
-        user: "apikey",     // SendGrid fixed user
-        pass: appPassword   // SendGrid API Key
-      }
-    });
+    // ✅ Fix: Remove leading/trailing blank lines
+    const cleanMessage = message.replace(/^\s+/, "").replace(/\s+$/, "");
 
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
@@ -94,7 +106,7 @@ app.post("/send-mail", async (req, res) => {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage, // exact template
+        text: plainMessage,
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
                </div>`
@@ -108,7 +120,7 @@ app.post("/send-mail", async (req, res) => {
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (format preserved)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
