@@ -50,10 +50,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// Super fast delay (10ms)
+// Super fast delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Bulk Mail Sender (preserve template lines)
+// Bulk Mail Sender (first line fix)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -71,26 +71,30 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipient emails found." });
     }
 
+    // ✅ Trim leading/trailing blank lines and spaces
+    const cleanMessage = message.replace(/^\s+/, "").replace(/\s+$/, "");
+
     let transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.sendgrid.net", // SendGrid SMTP
+      port: 587,
+      secure: false,
       auth: {
-        user: senderEmail,
-        pass: appPassword
+        user: "apikey",     // SendGrid fixed user
+        pass: appPassword   // SendGrid API Key
       }
     });
 
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
 
-      // ✅ Template preserve: plain text same as user input
-      const plainMessage = message;
-      const htmlMessage = message.replace(/\n/g, "<br>");
+      const plainMessage = cleanMessage;
+      const htmlMessage = cleanMessage.replace(/\n/g, "<br>");
 
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage, // exact format as entered
+        text: plainMessage, // exact template
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
                </div>`
@@ -100,11 +104,11 @@ app.post("/send-mail", async (req, res) => {
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(10); // super fast sending
+        await delay(10); // super fast
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (template preserved, super fast)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (format preserved)` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
