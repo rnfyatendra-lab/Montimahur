@@ -50,10 +50,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// Super fast delay (10ms)
+// Super fast delay
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Bulk Mail Sender (preserve template lines)
+// Bulk Mail Sender (SendGrid Ready)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -71,18 +71,21 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipient emails found." });
     }
 
+    // ✅ SendGrid SMTP Transporter
     let transporter = nodemailer.createTransport({
-      service: "gmail",
+      host: "smtp.sendgrid.net",
+      port: 587,
+      secure: false,
       auth: {
-        user: senderEmail,
-        pass: appPassword
+        user: "apikey",          // SendGrid में हमेशा "apikey"
+        pass: appPassword        // यहाँ तुम SendGrid का API Key डालोगे
       }
     });
 
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
 
-      // ✅ Template preserve: plain text same as user input
+      // Preserve exact template format
       const plainMessage = message;
       const htmlMessage = message.replace(/\n/g, "<br>");
 
@@ -90,21 +93,25 @@ app.post("/send-mail", async (req, res) => {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage, // exact format as entered
+        text: plainMessage,
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
-               </div>`
+               </div>`,
+        headers: {
+          "X-Priority": "3",
+          "X-MSMail-Priority": "Normal"
+        }
       };
 
       await transporter.sendMail(mailOptions);
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(10); // super fast sending
+        await delay(10); // super fast
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (template preserved, super fast)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully via SendGrid!` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
