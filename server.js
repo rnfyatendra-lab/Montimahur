@@ -50,10 +50,10 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// Delay for super-fast bulk (~10ms per mail)
+// Super fast delay (10ms)
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Bulk Mail Sender
+// Bulk Mail Sender (preserve template lines)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -82,33 +82,29 @@ app.post("/send-mail", async (req, res) => {
     for (let i = 0; i < recipientList.length; i++) {
       const recipient = recipientList[i];
 
-      // ✅ Preserve exact formatting of template
-      const plainMessage = message; // no changes
+      // ✅ Template preserve: plain text same as user input
+      const plainMessage = message;
       const htmlMessage = message.replace(/\n/g, "<br>");
 
       let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage, // plain text → preserves exact lines
+        text: plainMessage, // exact format as entered
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
-               </div>`,
-        headers: {
-          "X-Priority": "3",
-          "X-MSMail-Priority": "Normal"
-        }
+               </div>`
       };
 
       await transporter.sendMail(mailOptions);
       console.log(`✅ Sent to ${recipient}`);
 
       if (i < recipientList.length - 1) {
-        await delay(10); // super fast
+        await delay(10); // super fast sending
       }
     }
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (super fast, template preserved)` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (template preserved, super fast)` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
