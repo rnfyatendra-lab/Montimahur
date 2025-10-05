@@ -50,7 +50,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender (Ultra Fast - Parallel)
+// ✅ Bulk Mail Sender (Ultra Fast Parallel + Template Preserve)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -59,6 +59,7 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "⚠️ Please fill all fields before sending." });
     }
 
+    // ✅ Recipients clean list
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
@@ -77,11 +78,11 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Clean message → remove leading/trailing spaces
-    const cleanMessage = message.replace(/^\s*\n/, "").trimStart();
+    // ✅ Template exactly preserve, remove only leading blank lines
+    const cleanMessage = message.replace(/^\s*\n/, "");
 
-    // ✅ Prepare all emails
-    const emailPromises = recipientList.map(recipient => {
+    // ✅ Prepare promises for parallel sending
+    const emailPromises = recipientList.map(async (recipient) => {
       const plainMessage = cleanMessage;
       const htmlMessage = cleanMessage.replace(/\n/g, "<br>");
 
@@ -89,21 +90,24 @@ app.post("/send-mail", async (req, res) => {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage,
+        text: plainMessage, // plain text → inbox safe
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
                </div>`
       };
 
-      return transporter.sendMail(mailOptions)
-        .then(() => console.log(`✅ Sent to ${recipient}`))
-        .catch(err => console.error(`❌ Failed to ${recipient}:`, err.message));
+      try {
+        await transporter.sendMail(mailOptions);
+        console.log(`✅ Sent to ${recipient}`);
+      } catch (err) {
+        console.error(`❌ Failed to ${recipient}: ${err.message}`);
+      }
     });
 
-    // ✅ Send all in parallel (super ultra fast)
+    // ✅ Run all parallel
     await Promise.all(emailPromises);
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent ultra fast!` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
