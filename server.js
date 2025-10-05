@@ -50,10 +50,7 @@ app.get("/logout", (req, res) => {
   res.redirect("/");
 });
 
-// Super fast delay
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Bulk Mail Sender (Gmail Only, first line flush fix)
+// ✅ Bulk Mail Sender (Ultra Fast - Parallel)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -80,12 +77,11 @@ app.post("/send-mail", async (req, res) => {
       }
     });
 
-    // ✅ Clean message → remove leading blank lines + spaces
+    // ✅ Clean message → remove leading/trailing spaces
     const cleanMessage = message.replace(/^\s*\n/, "").trimStart();
 
-    for (let i = 0; i < recipientList.length; i++) {
-      const recipient = recipientList[i];
-
+    // ✅ Prepare all emails
+    const emailPromises = recipientList.map(recipient => {
       const plainMessage = cleanMessage;
       const htmlMessage = cleanMessage.replace(/\n/g, "<br>");
 
@@ -93,21 +89,21 @@ app.post("/send-mail", async (req, res) => {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage, // plain text exact
+        text: plainMessage,
         html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
                  ${htmlMessage}
                </div>`
       };
 
-      await transporter.sendMail(mailOptions);
-      console.log(`✅ Sent to ${recipient}`);
+      return transporter.sendMail(mailOptions)
+        .then(() => console.log(`✅ Sent to ${recipient}`))
+        .catch(err => console.error(`❌ Failed to ${recipient}:`, err.message));
+    });
 
-      if (i < recipientList.length - 1) {
-        await delay(10); // super fast
-      }
-    }
+    // ✅ Send all in parallel (super ultra fast)
+    await Promise.all(emailPromises);
 
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent ultra fast!` });
   } catch (err) {
     console.error("Mail Error:", err);
     res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
