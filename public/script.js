@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await res.json();
 
-      // ✅ Popup only
+      // ✅ Popup only (Success / Fail)
       alert(result.message);
 
       // Reset button back
