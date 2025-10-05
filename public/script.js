@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const mailForm = document.getElementById("mailForm");
   const sendBtn = document.getElementById("sendBtn");
 
-  // ✅ Login
+  // ✅ Login handler
   if (loginForm) {
     loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await res.json();
       if (result.success) {
+        alert("✅ Login successful!");
         window.location.href = "/launcher";
       } else {
         alert("❌ " + result.message);
@@ -24,16 +25,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ✅ Bulk mail
+  // ✅ Mail handler
   if (mailForm) {
     mailForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(mailForm).entries());
 
-      // 🔴 Button Pink + Sending
+      if (!data.senderName || !data.senderEmail || !data.appPassword || !data.subject || !data.message || !data.recipients) {
+        alert("⚠️ Please fill all fields!");
+        return;
+      }
+
       sendBtn.disabled = true;
-      sendBtn.style.background = "pink";
-      sendBtn.style.color = "#000";
+      sendBtn.style.background = "red";
       sendBtn.innerText = "Sending...";
 
       const res = await fetch("/send-mail", {
@@ -44,18 +48,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await res.json();
 
-      // ✅ Popup only (Success / Fail)
       alert(result.message);
 
-      // Reset button back
       sendBtn.disabled = false;
       sendBtn.style.background = "#4285f4";
-      sendBtn.style.color = "#fff";
       sendBtn.innerText = "Send All";
     });
   }
 });
 
+// ✅ Logout
 function logout() {
   window.location.href = "/logout";
 }
