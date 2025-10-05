@@ -5,11 +5,10 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 
 const app = express();
-const PUBLIC_DIR = path.resolve("public");
 
 // Middleware
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json({ limit: "10mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
 
 app.use(session({
   secret: "bulkmail_secret",
@@ -17,15 +16,15 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Serve static files
-app.use(express.static(PUBLIC_DIR));
+// Static files
+app.use(express.static(path.join(__dirname, "public")));
 
-// Root → login.html
+// ✅ Root route → login.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "login.html"));
+  res.sendFile(path.join(__dirname, "public", "login.html"));
 });
 
-// Login
+// ✅ Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   const AUTH_USER = "Lodhiyatendra";
@@ -33,26 +32,35 @@ app.post("/login", (req, res) => {
 
   if (username === AUTH_USER && password === AUTH_PASS) {
     req.session.user = username;
-    return res.json({ success: true });
+    res.json({ success: true });
+  } else {
+    res.json({ success: false, message: "Invalid credentials" });
   }
-  return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
-// Launcher
+// ✅ Launcher
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
-  res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
+  res.sendFile(path.join(__dirname, "public", "launcher.html"));
 });
 
-// Logout
+// ✅ Logout
 app.get("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/"));
+  req.session.destroy();
+  res.redirect("/");
 });
 
-// ✅ Bulk Mail Sender
+// ✅ Delay for fast bulk (~30ms each)
+const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+// ✅ Bulk Mail Sender (each recipient gets own "To")
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
+
+    if (!senderName || !senderEmail || !appPassword || !subject || !message || !recipients) {
+      return res.json({ success: false, message: "⚠️ Please fill all fields before sending." });
+    }
 
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
@@ -60,48 +68,41 @@ app.post("/send-mail", async (req, res) => {
       .filter(r => r.length > 0);
 
     if (recipientList.length === 0) {
-      return res.json({ success: false, message: "❌ No valid recipients" });
+      return res.json({ success: false, message: "❌ No valid recipient emails found." });
     }
 
     let transporter = nodemailer.createTransport({
       service: "gmail",
-      auth: { user: senderEmail, pass: appPassword }
+      auth: {
+        user: senderEmail,
+        pass: appPassword
+      }
     });
 
-    // Message जस का तस (पहली line space fix)
-    const cleanMessage = message.replace(/^\s+/, "");
-
-    let successCount = 0;
-    for (const recipient of recipientList) {
-      const mailOptions = {
+    for (let i = 0; i < recipientList.length; i++) {
+      let mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
-        to: recipient,
+        to: recipientList[i],   // ✅ Each mail shows current recipient
         subject,
-        text: cleanMessage,
-        html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
-                 ${cleanMessage.replace(/\n/g, "<br>")}
-               </div>`,
-        replyTo: senderEmail,
-        headers: { "X-Mailer": "BulkMailerApp" }
+        text: message,
+        html: `<div style="font-family: Arial, sans-serif; white-space: pre-wrap;">${message}</div>`
       };
 
-      try {
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ Mail sent to ${recipient}`);
-        successCount++;
-      } catch (err) {
-        console.error(`❌ Failed to ${recipient}: ${err.message}`);
+      await transporter.sendMail(mailOptions);
+      console.log(`✅ Sent to ${recipientList[i]}`);
+
+      if (i < recipientList.length - 1) {
+        await delay(30); // fast delay
       }
     }
 
-    return res.json({ success: true, message: `✅ ${successCount}/${recipientList.length} mails sent successfully` });
+    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (each mail shows its own To:)` });
   } catch (err) {
-    return res.json({ success: false, message: "❌ " + err.message });
+    console.error("Mail Error:", err);
+    res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
   }
 });
 
-// Fallback
-app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
-
+// ✅ Port
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
