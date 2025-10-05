@@ -5,10 +5,11 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 
 const app = express();
+const PUBLIC_DIR = path.resolve("public");
 
 // Middleware
-app.use(bodyParser.json({ limit: "10mb" }));
-app.use(bodyParser.urlencoded({ extended: true, limit: "10mb" }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.use(session({
   secret: "bulkmail_secret",
@@ -16,104 +17,94 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Static files
-app.use(express.static(path.join(__dirname, "public")));
+// Serve static files
+app.use(express.static(PUBLIC_DIR));
 
-// Root route → login.html
+// Root → login.html
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "login.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
 // Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  const AUTH_USER = "Lodhiyatendra";
-  const AUTH_PASS = "lodhi882@#";
+  const AUTH_USER = "Nikkilodhi";
+  const AUTH_PASS = "Lodhi882@#";
 
   if (username === AUTH_USER && password === AUTH_PASS) {
     req.session.user = username;
-    res.json({ success: true });
-  } else {
-    res.json({ success: false, message: "Invalid credentials" });
+    return res.json({ success: true });
   }
+  return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
 // Launcher
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
-  res.sendFile(path.join(__dirname, "public", "launcher.html"));
+  res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
 });
 
 // Logout
 app.get("/logout", (req, res) => {
-  req.session.destroy();
-  res.redirect("/");
+  req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Bulk Mail Sender (Ultra Fast Parallel + Template Preserve)
+// ✅ Bulk Mail Sender (line spacing fix + reliable sending)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
-    if (!senderName || !senderEmail || !appPassword || !subject || !message || !recipients) {
-      return res.json({ success: false, message: "⚠️ Please fill all fields before sending." });
-    }
-
-    // ✅ Recipients clean list
+    // ✅ recipients split
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
       .filter(r => r.length > 0);
 
     if (recipientList.length === 0) {
-      return res.json({ success: false, message: "❌ No valid recipient emails found." });
+      return res.json({ success: false, message: "❌ No valid recipients" });
     }
 
-    // ✅ Gmail SMTP Transporter
+    // ✅ Gmail Transport
     let transporter = nodemailer.createTransport({
       service: "gmail",
-      auth: {
-        user: senderEmail,
-        pass: appPassword // Gmail App Password (16-digit)
-      }
+      auth: { user: senderEmail, pass: appPassword }
     });
 
-    // ✅ Template exactly preserve, remove only leading blank lines
-    const cleanMessage = message.replace(/^\s*\n/, "");
+    // ✅ Message जस का तस भेजना (no trim / no extra space)
+    const cleanMessage = message;
 
-    // ✅ Prepare promises for parallel sending
-    const emailPromises = recipientList.map(async (recipient) => {
-      const plainMessage = cleanMessage;
-      const htmlMessage = cleanMessage.replace(/\n/g, "<br>");
-
-      let mailOptions = {
+    // ✅ Send mails one by one with async/await to ensure delivery
+    let successCount = 0;
+    for (const recipient of recipientList) {
+      const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: plainMessage, // plain text → inbox safe
-        html: `<div style="font-family: Arial, sans-serif; color:#000; line-height:1.5; white-space:pre-wrap;">
-                 ${htmlMessage}
-               </div>`
+        text: cleanMessage, // plain text
+        html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
+                 ${cleanMessage.replace(/\n/g, "<br>")}
+               </div>`,
+        replyTo: senderEmail,
+        headers: { "X-Mailer": "BulkMailerApp" }
       };
 
       try {
         await transporter.sendMail(mailOptions);
-        console.log(`✅ Sent to ${recipient}`);
+        console.log(`✅ Mail sent to ${recipient}`);
+        successCount++;
       } catch (err) {
         console.error(`❌ Failed to ${recipient}: ${err.message}`);
       }
-    });
+    }
 
-    // ✅ Run all parallel
-    await Promise.all(emailPromises);
-
-    res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully` });
+    return res.json({ success: true, message: `✅ ${successCount}/${recipientList.length} mails sent successfully` });
   } catch (err) {
-    console.error("Mail Error:", err);
-    res.json({ success: false, message: "❌ Mail sending failed: " + err.message });
+    return res.json({ success: false, message: "❌ " + err.message });
   }
 });
 
-// Port
+// Fallback
+app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
