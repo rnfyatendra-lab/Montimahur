@@ -28,8 +28,8 @@ app.get("/", (req, res) => {
 // Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  const AUTH_USER = "Nikkilodhi";
-  const AUTH_PASS = "Lodhi882@#";
+  const AUTH_USER = "Lodhiyatendra";
+  const AUTH_PASS = "lodhi882@#";
 
   if (username === AUTH_USER && password === AUTH_PASS) {
     req.session.user = username;
@@ -49,12 +49,11 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Bulk Mail Sender (line spacing fix + reliable sending)
+// ✅ Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
-    // ✅ recipients split
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
@@ -64,23 +63,21 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipients" });
     }
 
-    // ✅ Gmail Transport
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // ✅ Message जस का तस भेजना (no trim / no extra space)
-    const cleanMessage = message;
+    // Message जस का तस (पहली line space fix)
+    const cleanMessage = message.replace(/^\s+/, "");
 
-    // ✅ Send mails one by one with async/await to ensure delivery
     let successCount = 0;
     for (const recipient of recipientList) {
       const mailOptions = {
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: cleanMessage, // plain text
+        text: cleanMessage,
         html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
                  ${cleanMessage.replace(/\n/g, "<br>")}
                </div>`,
