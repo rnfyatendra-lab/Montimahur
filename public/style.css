@@ -1,27 +1,30 @@
-/* Buttons */
-.btn {
-  padding: 12px 18px;
-  border: 0;
-  border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
-  transition: transform .05s ease, box-shadow .2s ease, background .2s ease;
-  min-width: 160px;
-  background: #4285f4;
-  color: #fff;
-}
-
-.btn:hover {
-  background: #3473e6;
-}
-
-.btn:active { transform: translateY(1px); }
-
-/* Action row */
-.action-row {
-  grid-column: 1 / -1;
+/* Login page shell */
+.login-shell {
+  min-height: 100vh;
+  background: #f1f3f6;
   display: flex;
-  gap: 14px;
+  align-items: center;
   justify-content: center;
-  margin-top: 6px;
+  padding: 24px;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 400px;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+  padding: 28px;
+}
+
+.login-title {
+  text-align: center;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  color: #333;
+}
+
+.login-card .form-group {
+  margin-bottom: 18px;
 }
