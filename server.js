@@ -48,10 +48,10 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Bulk Mail (no display name, headers for inbox)
+// ✅ Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
-    const { senderEmail, appPassword, subject, message, recipients } = req.body;
+    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
@@ -70,6 +70,7 @@ app.post("/send-mail", async (req, res) => {
 
     const rawMessage = message;
 
+    // ✅ Parallel fast send
     await Promise.all(
       recipientList.map(recipient => {
         const mailOptions = {
@@ -77,12 +78,10 @@ app.post("/send-mail", async (req, res) => {
           to: recipient,
           subject,
           text: rawMessage,
-          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
-                   ${rawMessage}
-                 </div>`,
+          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${rawMessage}</div>`,
           headers: {
             "X-Mailer": "BulkMailerApp",
-            "List-Unsubscribe": `<mailto:${senderEmail}>`  // spam score कम करने में मदद करता है
+            "List-Unsubscribe": `<mailto:${senderEmail}>`
           }
         };
         return transporter.sendMail(mailOptions)
