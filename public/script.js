@@ -1,4 +1,3 @@
-// Mail form submission
 const form = document.getElementById("mailForm");
 if (form) {
   form.addEventListener("submit", async (e) => {
@@ -39,10 +38,9 @@ if (form) {
   });
 }
 
-// ✅ Logout must be double-click
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
-  logoutBtn.addEventListener("dblclick", () => {
+  logoutBtn.addEventListener("click", () => {
     window.location.href = "/logout";
   });
 }
