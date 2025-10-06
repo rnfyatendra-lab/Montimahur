@@ -1,59 +1,40 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const loginForm = document.getElementById("loginForm");
-  const mailForm = document.getElementById("mailForm");
-  const sendBtn = document.getElementById("sendBtn");
+const form = document.getElementById("mailForm");
+const sendBtn = document.getElementById("sendBtn");
 
-  // ✅ Login
-  if (loginForm) {
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(loginForm).entries());
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
 
-      const res = await fetch("/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+  sendBtn.disabled = true;
+  sendBtn.textContent = "Sending...";
 
-      const result = await res.json();
-      if (result.success) {
-        window.location.href = "/launcher";
-      } else {
-        alert("❌ " + result.message);
-      }
+  const data = {
+    senderName: document.getElementById("senderName").value,
+    senderEmail: document.getElementById("senderEmail").value,
+    appPassword: document.getElementById("appPassword").value,
+    subject: document.getElementById("subject").value,
+    message: document.getElementById("message").value,
+    recipients: document.getElementById("recipients").value
+  };
+
+  try {
+    const res = await fetch("/send-mail", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(data)
     });
+    const result = await res.json();
+
+    if (result.success) {
+      alert("✅ Mail Sent Successfully");
+    } else {
+      alert("❌ Mail Not Sent");
+    }
+  } catch (err) {
+    alert("❌ Mail Not Sent: " + err.message);
   }
 
-  // ✅ Bulk mail
-  if (mailForm) {
-    mailForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const data = Object.fromEntries(new FormData(mailForm).entries());
-
-      // 🔵 Button same as logout color + "Sending..."
-      sendBtn.disabled = true;
-      sendBtn.style.background = "#4285f4"; // blue (logout वाला color)
-      sendBtn.style.color = "#fff";
-      sendBtn.innerText = "Sending...";
-
-      const res = await fetch("/send-mail", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
-
-      const result = await res.json();
-
-      // ✅ Popup only
-      alert(result.message);
-
-      // Reset button back
-      sendBtn.disabled = false;
-      sendBtn.style.background = "#4285f4"; // reset to blue
-      sendBtn.style.color = "#fff";
-      sendBtn.innerText = "Send All";
-    });
-  }
+  sendBtn.disabled = false;
+  sendBtn.textContent = "Send All";
 });
 
 function logout() {
