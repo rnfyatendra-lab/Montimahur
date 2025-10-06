@@ -16,15 +16,13 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Static files
+// static
 app.use(express.static(PUBLIC_DIR));
 
-// Root → login
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// Login route
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "Lodhiyatendra" && password === "lodhi882@#") {
@@ -34,21 +32,18 @@ app.post("/login", (req, res) => {
   return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
-// Launcher
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
 });
 
-// Logout
 app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Bulk Mail sender
 app.post("/send-mail", async (req, res) => {
   try {
-    const { senderEmail, appPassword, subject, message, recipients } = req.body;
+    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
@@ -64,26 +59,20 @@ app.post("/send-mail", async (req, res) => {
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    const results = [];
+    // Parallel send (faster)
+    await Promise.all(recipientList.map(recipient => {
+      return transporter.sendMail({
+        from: `"${senderName}" <${senderEmail}>`,
+        to: recipient,
+        subject,
+        text: message,
+        html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${message}</div>`
+      });
+    }));
 
-    for (const recipient of recipientList) {
-      try {
-        await transporter.sendMail({
-          from: senderEmail,
-          to: recipient,
-          subject,
-          text: message,
-          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${message}</div>`
-        });
-        results.push({ recipient, status: "✅ Sent" });
-      } catch (err) {
-        results.push({ recipient, status: "❌ Failed", error: err.message });
-      }
-    }
-
-    return res.json({ success: true, results });
+    return res.json({ success: true });
   } catch (err) {
-    return res.json({ success: false, message: "❌ " + err.message });
+    return res.json({ success: false, message: err.message });
   }
 });
 
