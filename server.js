@@ -1,14 +1,11 @@
 const express = require("express");
 const session = require("express-session");
 const bodyParser = require("body-parser");
-const sgMail = require("@sendgrid/mail");
+const nodemailer = require("nodemailer");
 const path = require("path");
 
 const app = express();
 const PUBLIC_DIR = path.resolve("public");
-
-// ✅ Put your SendGrid API key in Render Env Variables
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -19,13 +16,15 @@ app.use(session({
   saveUninitialized: false
 }));
 
+// Serve static files
 app.use(express.static(PUBLIC_DIR));
 
+// Root → login.html
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// ✅ Login check
+// Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   const AUTH_USER = "Lodhiyatendra";
@@ -38,21 +37,21 @@ app.post("/login", (req, res) => {
   return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
-// ✅ Launcher page
+// Launcher
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
 });
 
-// ✅ Logout
+// Logout
 app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Ultra Fast Bulk Mail with SendGrid API
+// ✅ Super Fast Bulk Mail Sender
 app.post("/send-mail", async (req, res) => {
   try {
-    const { senderName, senderEmail, subject, message, recipients } = req.body;
+    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
@@ -63,31 +62,41 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipients" });
     }
 
-    // Template clean (remove only starting spaces)
+    // Gmail SMTP Transporter
+    let transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: { user: senderEmail, pass: appPassword }
+    });
+
+    // ✅ Template जस का तस (पहली line space fix)
     const cleanMessage = message.replace(/^\s+/, "");
 
-    // Prepare SendGrid messages
-    const msgs = recipientList.map(recipient => ({
-      to: recipient,
-      from: { email: senderEmail, name: senderName },
-      subject,
-      text: cleanMessage,
-      html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
-               ${cleanMessage.replace(/\n/g, "<br>")}
-             </div>`
-    }));
+    // ✅ Parallel fire all mails (super fast)
+    const promises = recipientList.map(recipient => {
+      const mailOptions = {
+        from: `"${senderName}" <${senderEmail}>`,
+        to: recipient,
+        subject,
+        text: cleanMessage,
+        html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
+                 ${cleanMessage.replace(/\n/g, "<br>")}
+               </div>`
+      };
 
-    // ✅ Ultra fast send (all in parallel)
-    await sgMail.send(msgs, { batch: true, throwErrors: true });
+      return transporter.sendMail(mailOptions)
+        .then(() => console.log(`✅ Sent to ${recipient}`))
+        .catch(err => console.error(`❌ ${recipient}: ${err.message}`));
+    });
 
-    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent in <1 second 🚀` });
+    await Promise.all(promises); // ✅ fire all in parallel
+
+    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent ultra fast 🚀` });
   } catch (err) {
-    console.error("Mail Error:", err);
     return res.json({ success: false, message: "❌ " + err.message });
   }
 });
 
-// Fallback → login page
+// Fallback
 app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
 
 const PORT = process.env.PORT || 3000;
