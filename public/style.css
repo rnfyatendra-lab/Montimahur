@@ -26,6 +26,7 @@
   display: grid;
   grid-template-columns: 1fr 1fr; /* 2 columns */
   gap: 18px 22px;
+  align-items: start;
 }
 
 .form-group {
@@ -39,6 +40,7 @@ input, textarea {
   font-size: 14px;
   border: 1px solid #ccc;
   border-radius: 6px;
+  width: 100%;
 }
 
 textarea {
@@ -54,7 +56,7 @@ textarea {
   color: white;
   cursor: pointer;
   font-size: 16px;
-  min-width: 140px;
+  width: 100%; /* each button same width in column */
 }
 
 .btn:hover { background: #3073e0; }
