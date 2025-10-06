@@ -24,19 +24,14 @@
 
 .landscape-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px;
+  grid-template-columns: 1fr 1fr; /* 2 columns side by side */
+  gap: 18px 22px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-/* Message full width */
-.form-group.tall {
-  grid-column: 1 / -1;
 }
 
 input, textarea {
@@ -51,14 +46,6 @@ textarea {
   resize: vertical;
 }
 
-.action-row {
-  grid-column: 1 / -1;
-  display: flex;
-  justify-content: center;
-  gap: 14px;
-  margin-top: 10px;
-}
-
 .btn {
   padding: 12px 20px;
   border: none;
@@ -67,7 +54,7 @@ textarea {
   color: white;
   cursor: pointer;
   font-size: 16px;
-  min-width: 160px;
+  min-width: 140px;
 }
 
 .btn:hover { background: #3073e0; }
