@@ -47,14 +47,7 @@ input, textarea {
   width: 100%;
 }
 
-textarea#message {
-  min-height: 120px;
-  resize: vertical;
-  font-family: "High Tower Text", Arial, serif; /* ✅ High Tower Text style */
-  font-size: 16px;
-}
-
-textarea#recipients {
+textarea {
   min-height: 120px;
   resize: vertical;
 }
