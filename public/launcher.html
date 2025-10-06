@@ -12,21 +12,24 @@
       <h2 class="landscape-title">Bulk Mail Launcher</h2>
 
       <form id="mailForm" class="landscape-grid">
-        <div class="form-group">
+        
+        <!-- Bigger input fields -->
+        <div class="form-group big">
           <label for="senderEmail">Sender Email</label>
           <input type="email" id="senderEmail" name="senderEmail" required />
         </div>
 
-        <div class="form-group">
+        <div class="form-group big">
           <label for="appPassword">App Password</label>
           <input type="password" id="appPassword" name="appPassword" required />
         </div>
 
-        <div class="form-group">
+        <div class="form-group big">
           <label for="subject">Subject</label>
           <input type="text" id="subject" name="subject" required />
         </div>
 
+        <!-- Normal fields -->
         <div class="form-group">
           <label for="recipients">Recipients</label>
           <textarea id="recipients" name="recipients" placeholder="One email per line" required></textarea>
