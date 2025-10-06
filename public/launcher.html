@@ -12,39 +12,31 @@
       <h2 class="landscape-title">Bulk Mail Launcher</h2>
 
       <form id="mailForm" class="landscape-grid">
-        <!-- Left column -->
-        <div class="form-group">
-          <label for="senderName">Sender Name</label>
-          <input type="text" id="senderName" name="senderName" placeholder="Enter your name" />
-        </div>
-
         <div class="form-group">
           <label for="senderEmail">Sender Email</label>
-          <input type="email" id="senderEmail" name="senderEmail" placeholder="Enter your email" required />
+          <input type="email" id="senderEmail" name="senderEmail" required />
         </div>
 
         <div class="form-group">
           <label for="appPassword">App Password</label>
-          <input type="password" id="appPassword" name="appPassword" placeholder="Enter App Password" required />
+          <input type="password" id="appPassword" name="appPassword" required />
         </div>
 
         <div class="form-group">
           <label for="subject">Subject</label>
-          <input type="text" id="subject" name="subject" placeholder="Enter subject" required />
+          <input type="text" id="subject" name="subject" required />
         </div>
 
-        <!-- Right column -->
+        <div class="form-group">
+          <label for="recipients">Recipients</label>
+          <textarea id="recipients" name="recipients" placeholder="One email per line" required></textarea>
+        </div>
+
         <div class="form-group tall">
           <label for="message">Message</label>
-          <textarea id="message" name="message" placeholder="Type your email message..." required></textarea>
+          <textarea id="message" name="message" required></textarea>
         </div>
 
-        <div class="form-group tall">
-          <label for="recipients">Client IDs (Recipients)</label>
-          <textarea id="recipients" name="recipients" placeholder="Emails separated by commas or new lines" required></textarea>
-        </div>
-
-        <!-- Full-width action row -->
         <div class="action-row">
           <button type="submit" id="sendBtn" class="btn primary">Send All</button>
           <button type="button" onclick="logout()" class="btn primary">Logout</button>
