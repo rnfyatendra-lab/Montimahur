@@ -1,90 +1,3 @@
-/* Base page layout */
-* { box-sizing: border-box; }
-html, body {
-  height: 100%;
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f1f3f6;
-  color: #222;
-}
-
-/* Centered wide shell for landscape look */
-.landscape-shell {
-  min-height: 100vh;
-  padding: 24px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-/* Card container (wider for landscape) */
-.landscape-card {
-  width: 100%;
-  max-width: 1200px;            /* ⬅️ landscape width */
-  background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
-  padding: 28px;
-}
-
-/* Title */
-.landscape-title {
-  margin: 0 0 18px 0;
-  font-size: 24px;
-  font-weight: 700;
-  text-align: center;
-}
-
-/* Two-column grid */
-.landscape-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;  /* ⬅️ 2 columns */
-  gap: 18px 22px;                  /* row / column gaps */
-}
-
-/* Form groups */
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.form-group.tall textarea {
-  min-height: 220px;              /* taller boxes for landscape */
-  resize: vertical;
-}
-
-/* Labels & inputs */
-label {
-  font-weight: 600;
-  color: #444;
-}
-
-input, textarea {
-  width: 100%;
-  padding: 12px 12px;
-  border: 1px solid #dcdfe4;
-  border-radius: 8px;
-  font-size: 14px;
-  background: #fff;
-  outline: none;
-  transition: border-color .2s ease, box-shadow .2s ease;
-}
-
-input:focus, textarea:focus {
-  border-color: #4285f4;
-  box-shadow: 0 0 0 3px rgba(66,133,244,0.15);
-}
-
-/* Action buttons (full row) */
-.action-row {
-  grid-column: 1 / -1;            /* ⬅️ full width row */
-  display: flex;
-  gap: 14px;
-  justify-content: center;
-  margin-top: 6px;
-}
-
 /* Buttons */
 .btn {
   padding: 12px 18px;
@@ -94,29 +7,21 @@ input:focus, textarea:focus {
   cursor: pointer;
   transition: transform .05s ease, box-shadow .2s ease, background .2s ease;
   min-width: 160px;
+  background: #4285f4;
+  color: #fff;
+}
+
+.btn:hover {
+  background: #3473e6;
 }
 
 .btn:active { transform: translateY(1px); }
 
-.btn.primary {
-  background: #4285f4;  /* same blue as logout (as requested earlier) */
-  color: #fff;
-}
-
-.btn.primary:hover { background: #3473e6; }
-
-.btn.danger {
-  background: #e53935;
-  color: #fff;
-}
-
-.btn.danger:hover { background: #cc2f2c; }
-
-/* Responsive: stack to single column on small screens */
-@media (max-width: 980px) {
-  .landscape-card { max-width: 100%; }
-  .landscape-grid { grid-template-columns: 1fr; }
-  .form-group.tall textarea { min-height: 180px; }
-  .action-row { justify-content: stretch; }
-  .btn { width: 100%; }
+/* Action row */
+.action-row {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-top: 6px;
 }
