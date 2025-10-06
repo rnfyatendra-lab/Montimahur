@@ -18,12 +18,12 @@ app.use(session({
 
 app.use(express.static(PUBLIC_DIR));
 
-// Root → Login page
+// Root → Login
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// Login route
+// Login
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "Lodhiyatendra" && password === "lodhi882@#") {
@@ -33,7 +33,7 @@ app.post("/login", (req, res) => {
   return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
-// Launcher page
+// Launcher
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// Send Mail
+// Send Mail (unlimited bulk)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -63,7 +63,7 @@ app.post("/send-mail", async (req, res) => {
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // Parallel sending (fast)
+    // Send mails in parallel → कोई limit नहीं
     await Promise.all(recipientList.map(recipient => {
       return transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
@@ -79,7 +79,7 @@ app.post("/send-mail", async (req, res) => {
   }
 });
 
-// Fallback → Login
+// Fallback
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
