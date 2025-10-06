@@ -1,41 +1,42 @@
 const form = document.getElementById("mailForm");
-const sendBtn = document.getElementById("sendBtn");
+if (form) {
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
 
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
+    const sendBtn = document.getElementById("sendBtn");
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Sending...";
 
-  sendBtn.disabled = true;
-  sendBtn.textContent = "Sending...";
+    const data = {
+      senderName: document.getElementById("senderName").value,
+      senderEmail: document.getElementById("senderEmail").value,
+      appPassword: document.getElementById("appPassword").value,
+      subject: document.getElementById("subject").value,
+      message: document.getElementById("message") ? document.getElementById("message").value : "",
+      recipients: document.getElementById("recipients").value
+    };
 
-  const data = {
-    senderName: document.getElementById("senderName").value,
-    senderEmail: document.getElementById("senderEmail").value,
-    appPassword: document.getElementById("appPassword").value,
-    subject: document.getElementById("subject").value,
-    message: document.getElementById("message").value,
-    recipients: document.getElementById("recipients").value
-  };
+    try {
+      const res = await fetch("/send-mail", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
 
-  try {
-    const res = await fetch("/send-mail", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data)
-    });
-    const result = await res.json();
-
-    if (result.success) {
-      alert("✅ Mail Sent Successfully");
-    } else {
-      alert("❌ Mail Not Sent");
+      if (result.success) {
+        alert("✅ Mail Sent Successfully");
+      } else {
+        alert("❌ Mail Not Sent");
+      }
+    } catch (err) {
+      alert("❌ Mail Not Sent: " + err.message);
     }
-  } catch (err) {
-    alert("❌ Mail Not Sent: " + err.message);
-  }
 
-  sendBtn.disabled = false;
-  sendBtn.textContent = "Send All";
-});
+    sendBtn.disabled = false;
+    sendBtn.textContent = "Send All";
+  });
+}
 
 function logout() {
   window.location.href = "/logout";
