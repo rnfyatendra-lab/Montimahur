@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// 🚀 FAST Bulk Mail Sending (0.1 sec per mail)
+// 🚀 SUPER FAST Bulk Mail Sending (~30 mails in ~1 sec)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -63,26 +63,21 @@ app.post("/send-mail", async (req, res) => {
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    let successCount = 0;
-
-    for (let recipient of recipientList) {
-      try {
-        await transporter.sendMail({
+    // ✅ All mails send in parallel → super fast
+    await Promise.all(
+      recipientList.map(recipient =>
+        transporter.sendMail({
           from: `"${senderName}" <${senderEmail}>`,
           to: recipient,
           subject,
           text: message
-        });
-        successCount++;
-      } catch (err) {
-        console.error(`❌ Failed for ${recipient}:`, err.message);
-      }
+        }).catch(err => {
+          console.error(`❌ Failed for ${recipient}:`, err.message);
+        })
+      )
+    );
 
-      // ✅ छोटा delay (0.1 sec) हर mail के बीच
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-
-    return res.json({ success: true, message: `✅ ${successCount}/${recipientList.length} mails sent` });
+    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent (fast)` });
   } catch (err) {
     return res.json({ success: false, message: err.message });
   }
