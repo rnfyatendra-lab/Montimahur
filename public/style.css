@@ -1,30 +1,65 @@
-/* Login page shell */
-.login-shell {
+/* Landscape login same style */
+.landscape-shell {
   min-height: 100vh;
-  background: #f1f3f6;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 24px;
+  background: #f1f3f6;
 }
 
-.login-card {
+.landscape-card {
   width: 100%;
-  max-width: 400px;
+  max-width: 800px;          /* ⬅️ wide look for login */
   background: #fff;
   border-radius: 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.08);
   padding: 28px;
 }
 
-.login-title {
+.landscape-title {
+  margin-bottom: 20px;
   text-align: center;
   font-size: 24px;
   font-weight: 700;
-  margin-bottom: 20px;
   color: #333;
 }
 
-.login-card .form-group {
-  margin-bottom: 18px;
+/* Two-column form grid */
+.landscape-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 22px;
+}
+
+/* Make login fields centered */
+.landscape-grid .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.action-row {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+
+/* Buttons */
+.btn {
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  background: #4285f4;
+  color: #fff;
+  min-width: 160px;
+}
+
+.btn:hover { background: #3073e0; }
+
+@media (max-width: 700px) {
+  .landscape-grid { grid-template-columns: 1fr; }
 }
