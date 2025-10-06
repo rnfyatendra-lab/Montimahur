@@ -24,7 +24,7 @@
 
 .landscape-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 columns side by side */
+  grid-template-columns: 1fr 1fr; /* 2 columns */
   gap: 18px 22px;
 }
 
