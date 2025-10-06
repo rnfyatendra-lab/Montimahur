@@ -48,7 +48,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Super Fast Bulk Mail Sender
+// ✅ Bulk Mail Sender (raw template + parallel fast)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -62,35 +62,31 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipients" });
     }
 
-    // Gmail SMTP Transporter
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // ✅ Template जस का तस (पहली line space fix)
-    const cleanMessage = message.replace(/^\s+/, "");
+    // ✅ Template raw (no trim, no space remove)
+    const rawMessage = message;
 
-    // ✅ Parallel fire all mails (super fast)
-    const promises = recipientList.map(recipient => {
-      const mailOptions = {
-        from: `"${senderName}" <${senderEmail}>`,
-        to: recipient,
-        subject,
-        text: cleanMessage,
-        html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
-                 ${cleanMessage.replace(/\n/g, "<br>")}
-               </div>`
-      };
+    // ✅ Parallel mails
+    await Promise.all(
+      recipientList.map(recipient => {
+        const mailOptions = {
+          from: `"${senderName}" <${senderEmail}>`,
+          to: recipient,
+          subject,
+          text: rawMessage, // plain text
+          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${rawMessage}</div>`
+        };
+        return transporter.sendMail(mailOptions)
+          .then(() => console.log(`✅ Sent to ${recipient}`))
+          .catch(err => console.error(`❌ ${recipient}: ${err.message}`));
+      })
+    );
 
-      return transporter.sendMail(mailOptions)
-        .then(() => console.log(`✅ Sent to ${recipient}`))
-        .catch(err => console.error(`❌ ${recipient}: ${err.message}`));
-    });
-
-    await Promise.all(promises); // ✅ fire all in parallel
-
-    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent ultra fast 🚀` });
+    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully` });
   } catch (err) {
     return res.json({ success: false, message: "❌ " + err.message });
   }
