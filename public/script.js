@@ -1,3 +1,4 @@
+// Mail form submission
 const form = document.getElementById("mailForm");
 if (form) {
   form.addEventListener("submit", async (e) => {
@@ -25,9 +26,9 @@ if (form) {
       const result = await res.json();
 
       if (result.success) {
-        alert("✅ Mail Sent Successfully");
+        alert(result.message || "✅ Mail Sent Successfully");
       } else {
-        alert("❌ Mail Not Sent");
+        alert(result.message || "❌ Mail Not Sent");
       }
     } catch (err) {
       alert("❌ Mail Not Sent: " + err.message);
@@ -38,9 +39,10 @@ if (form) {
   });
 }
 
+// ✅ Logout requires double-click
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
-  logoutBtn.addEventListener("click", () => {
+  logoutBtn.addEventListener("dblclick", () => {
     window.location.href = "/logout";
   });
 }
