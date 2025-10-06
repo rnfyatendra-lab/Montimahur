@@ -48,11 +48,12 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Bulk Mail Sender (raw template + parallel fast)
+// ✅ Bulk Mail Sender (no limit + fast parallel)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
 
+    // Split recipients (no limit)
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
@@ -62,22 +63,22 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipients" });
     }
 
+    // Gmail SMTP Transporter
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // ✅ Template raw (no trim, no space remove)
-    const rawMessage = message;
+    const rawMessage = message; // templates जस के तस
 
-    // ✅ Parallel mails
+    // ✅ Send all mails in parallel (super fast, no limit)
     await Promise.all(
       recipientList.map(recipient => {
         const mailOptions = {
           from: `"${senderName}" <${senderEmail}>`,
           to: recipient,
           subject,
-          text: rawMessage, // plain text
+          text: rawMessage,
           html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${rawMessage}</div>`
         };
         return transporter.sendMail(mailOptions)
@@ -86,7 +87,7 @@ app.post("/send-mail", async (req, res) => {
       })
     );
 
-    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully` });
+    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (No Limit 🚀)` });
   } catch (err) {
     return res.json({ success: false, message: "❌ " + err.message });
   }
