@@ -48,12 +48,11 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Bulk Mail Sender (no limit + fast parallel)
+// ✅ Bulk Mail (no display name, headers for inbox)
 app.post("/send-mail", async (req, res) => {
   try {
-    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
+    const { senderEmail, appPassword, subject, message, recipients } = req.body;
 
-    // Split recipients (no limit)
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
@@ -63,23 +62,28 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ No valid recipients" });
     }
 
-    // Gmail SMTP Transporter
+    // Gmail SMTP
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    const rawMessage = message; // templates जस के तस
+    const rawMessage = message;
 
-    // ✅ Send all mails in parallel (super fast, no limit)
     await Promise.all(
       recipientList.map(recipient => {
         const mailOptions = {
-          from: `"${senderName}" <${senderEmail}>`,
+          from: senderEmail,  // 👈 सिर्फ email, कोई नाम नहीं
           to: recipient,
           subject,
           text: rawMessage,
-          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${rawMessage}</div>`
+          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">
+                   ${rawMessage}
+                 </div>`,
+          headers: {
+            "X-Mailer": "BulkMailerApp",
+            "List-Unsubscribe": `<mailto:${senderEmail}>`  // spam score कम करने में मदद करता है
+          }
         };
         return transporter.sendMail(mailOptions)
           .then(() => console.log(`✅ Sent to ${recipient}`))
@@ -87,7 +91,7 @@ app.post("/send-mail", async (req, res) => {
       })
     );
 
-    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (No Limit 🚀)` });
+    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully` });
   } catch (err) {
     return res.json({ success: false, message: "❌ " + err.message });
   }
@@ -97,4 +101,4 @@ app.post("/send-mail", async (req, res) => {
 app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Ultra Fast Mailer running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Bulk Mailer running on port ${PORT}`));
