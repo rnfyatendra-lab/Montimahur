@@ -30,10 +30,10 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       const data = Object.fromEntries(new FormData(mailForm).entries());
 
-      // 🔴 Button Pink + "Sending"
+      // 🔵 Button same as logout color + "Sending..."
       sendBtn.disabled = true;
-      sendBtn.style.background = "pink";
-      sendBtn.style.color = "#000";
+      sendBtn.style.background = "#4285f4"; // blue (logout वाला color)
+      sendBtn.style.color = "#fff";
       sendBtn.innerText = "Sending...";
 
       const res = await fetch("/send-mail", {
@@ -44,12 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const result = await res.json();
 
-      // ✅ Only popup message
+      // ✅ Popup only
       alert(result.message);
 
       // Reset button back
       sendBtn.disabled = false;
-      sendBtn.style.background = "#4285f4";
+      sendBtn.style.background = "#4285f4"; // reset to blue
       sendBtn.style.color = "#fff";
       sendBtn.innerText = "Send All";
     });
