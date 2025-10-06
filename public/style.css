@@ -4,14 +4,14 @@ body {
   margin: 0;
 }
 
-.login-shell, .landscape-shell {
+.landscape-shell {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.login-card, .landscape-card {
+.landscape-card {
   background: #fff;
   padding: 28px;
   border-radius: 14px;
@@ -20,26 +20,36 @@ body {
   max-width: 1000px;
 }
 
+.landscape-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
 .landscape-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr; /* 2 columns */
   gap: 18px 22px;
 }
 
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
 }
 
 input, textarea {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
 }
 
 textarea {
   min-height: 100px;
+  resize: vertical;
 }
 
 .btn {
@@ -48,7 +58,17 @@ textarea {
   border-radius: 8px;
   background: #4285f4;
   color: white;
-  font-size: 16px;
   cursor: pointer;
+  font-size: 16px;
   width: 100%;
+}
+
+.btn:hover {
+  background: #3073e0;
+}
+
+@media (max-width: 700px) {
+  .landscape-grid {
+    grid-template-columns: 1fr;
+  }
 }
