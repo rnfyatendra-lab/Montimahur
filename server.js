@@ -5,7 +5,7 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 
 const app = express();
-const PUBLIC_DIR = path.resolve("public");
+const PUBLIC_DIR = path.join(__dirname, "public");
 
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -16,13 +16,14 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// static
 app.use(express.static(PUBLIC_DIR));
 
+// Root → Login page
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
+// Login route
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "Lodhiyatendra" && password === "lodhi882@#") {
@@ -32,15 +33,18 @@ app.post("/login", (req, res) => {
   return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
+// Launcher page
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
 });
 
+// Logout
 app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
+// Send Mail
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -59,14 +63,13 @@ app.post("/send-mail", async (req, res) => {
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // Parallel send (faster)
+    // Parallel sending (fast)
     await Promise.all(recipientList.map(recipient => {
       return transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
         to: recipient,
         subject,
-        text: message,
-        html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${message}</div>`
+        text: message
       });
     }));
 
@@ -76,7 +79,10 @@ app.post("/send-mail", async (req, res) => {
   }
 });
 
-app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
+// Fallback → Login
+app.get("*", (req, res) => {
+  res.sendFile(path.join(PUBLIC_DIR, "login.html"));
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`🚀 Bulk Mailer running on port ${PORT}`));
