@@ -1,65 +1,59 @@
-/* Landscape login same style */
 .landscape-shell {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 24px;
   background: #f1f3f6;
 }
 
 .landscape-card {
   width: 100%;
-  max-width: 800px;          /* ⬅️ wide look for login */
+  max-width: 1000px;   /* wide landscape */
   background: #fff;
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.08);
   padding: 28px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
 }
 
 .landscape-title {
-  margin-bottom: 20px;
   text-align: center;
-  font-size: 24px;
-  font-weight: 700;
-  color: #333;
+  margin-bottom: 20px;
 }
 
-/* Two-column form grid */
 .landscape-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 18px 22px;
+  gap: 18px;
 }
 
-/* Make login fields centered */
-.landscape-grid .form-group {
+.form-group {
   display: flex;
   flex-direction: column;
   gap: 8px;
+}
+
+.form-group.tall {
+  grid-column: 1 / -1;
+}
+
+textarea {
+  min-height: 120px;
 }
 
 .action-row {
   grid-column: 1 / -1;
   display: flex;
   justify-content: center;
+  gap: 14px;
   margin-top: 10px;
 }
 
-/* Buttons */
 .btn {
   padding: 12px 20px;
-  border: 0;
+  border: none;
   border-radius: 8px;
-  font-size: 16px;
-  cursor: pointer;
   background: #4285f4;
-  color: #fff;
-  min-width: 160px;
-}
-
-.btn:hover { background: #3073e0; }
-
-@media (max-width: 700px) {
-  .landscape-grid { grid-template-columns: 1fr; }
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
 }
