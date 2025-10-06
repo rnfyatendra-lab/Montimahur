@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// Send Mail (unlimited bulk)
+// Send Mail (bulk fixed with try/catch per recipient)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -63,17 +63,29 @@ app.post("/send-mail", async (req, res) => {
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // Send mails in parallel → कोई limit नहीं
-    await Promise.all(recipientList.map(recipient => {
-      return transporter.sendMail({
-        from: `"${senderName}" <${senderEmail}>`,
-        to: recipient,
-        subject,
-        text: message
-      });
-    }));
+    let successCount = 0;
+    let failCount = 0;
 
-    return res.json({ success: true });
+    for (let recipient of recipientList) {
+      try {
+        await transporter.sendMail({
+          from: `"${senderName}" <${senderEmail}>`,
+          to: recipient,
+          subject,
+          text: message
+        });
+        successCount++;
+      } catch (err) {
+        console.error(`Failed for ${recipient}:`, err.message);
+        failCount++;
+      }
+    }
+
+    if (successCount > 0) {
+      return res.json({ success: true, message: `✅ Sent: ${successCount}, ❌ Failed: ${failCount}` });
+    } else {
+      return res.json({ success: false, message: "❌ Mail Not Sent to any recipient" });
+    }
   } catch (err) {
     return res.json({ success: false, message: err.message });
   }
