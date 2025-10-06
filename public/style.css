@@ -24,7 +24,7 @@
 
 .landscape-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr; /* 2 columns */
+  grid-template-columns: 1fr 1fr;
   gap: 18px 22px;
   align-items: start;
 }
@@ -44,7 +44,7 @@ input, textarea {
 }
 
 textarea {
-  min-height: 120px;
+  min-height: 100px;
   resize: vertical;
 }
 
@@ -56,7 +56,7 @@ textarea {
   color: white;
   cursor: pointer;
   font-size: 16px;
-  width: 100%; /* each button same width in column */
+  width: 100%;
 }
 
 .btn:hover { background: #3073e0; }
