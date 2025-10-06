@@ -16,21 +16,18 @@ app.use(session({
   saveUninitialized: false
 }));
 
-// Serve static files
+// Static files
 app.use(express.static(PUBLIC_DIR));
 
-// Root → login.html
+// Root → login
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// Login
+// Login route
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  const AUTH_USER = "Lodhiyatendra";
-  const AUTH_PASS = "lodhi882@#";
-
-  if (username === AUTH_USER && password === AUTH_PASS) {
+  if (username === "Lodhiyatendra" && password === "lodhi882@#") {
     req.session.user = username;
     return res.json({ success: true });
   }
@@ -48,53 +45,49 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ✅ Bulk Mail Sender (no limit + fast parallel)
+// ✅ Bulk Mail sender
 app.post("/send-mail", async (req, res) => {
   try {
-    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
+    const { senderEmail, appPassword, subject, message, recipients } = req.body;
 
-    // Split recipients (no limit)
     let recipientList = recipients
       .split(/[\n,;,\s]+/)
       .map(r => r.trim())
-      .filter(r => r.length > 0);
+      .filter(r => r);
 
     if (recipientList.length === 0) {
       return res.json({ success: false, message: "❌ No valid recipients" });
     }
 
-    // Gmail SMTP Transporter
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    const rawMessage = message; // templates जस के तस
+    const results = [];
 
-    // ✅ Send all mails in parallel (super fast, no limit)
-    await Promise.all(
-      recipientList.map(recipient => {
-        const mailOptions = {
-          from: `"${senderName}" <${senderEmail}>`,
+    for (const recipient of recipientList) {
+      try {
+        await transporter.sendMail({
+          from: senderEmail,
           to: recipient,
           subject,
-          text: rawMessage,
-          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${rawMessage}</div>`
-        };
-        return transporter.sendMail(mailOptions)
-          .then(() => console.log(`✅ Sent to ${recipient}`))
-          .catch(err => console.error(`❌ ${recipient}: ${err.message}`));
-      })
-    );
+          text: message,
+          html: `<div style="font-family: Arial; line-height:1.5; white-space:pre-wrap;">${message}</div>`
+        });
+        results.push({ recipient, status: "✅ Sent" });
+      } catch (err) {
+        results.push({ recipient, status: "❌ Failed", error: err.message });
+      }
+    }
 
-    return res.json({ success: true, message: `✅ ${recipientList.length} mails sent successfully (No Limit 🚀)` });
+    return res.json({ success: true, results });
   } catch (err) {
     return res.json({ success: false, message: "❌ " + err.message });
   }
 });
 
-// Fallback
 app.get("*", (req, res) => res.sendFile(path.join(PUBLIC_DIR, "login.html")));
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Ultra Fast Mailer running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Bulk Mailer running on port ${PORT}`));
