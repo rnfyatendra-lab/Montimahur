@@ -1,3 +1,4 @@
+// Mail form submission
 const form = document.getElementById("mailForm");
 if (form) {
   form.addEventListener("submit", async (e) => {
@@ -12,7 +13,7 @@ if (form) {
       senderEmail: document.getElementById("senderEmail").value,
       appPassword: document.getElementById("appPassword").value,
       subject: document.getElementById("subject").value,
-      message: document.getElementById("message") ? document.getElementById("message").value : "",
+      message: document.getElementById("message").value,
       recipients: document.getElementById("recipients").value
     };
 
@@ -38,6 +39,10 @@ if (form) {
   });
 }
 
-function logout() {
-  window.location.href = "/logout";
+// ✅ Logout must be double-click
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("dblclick", () => {
+    window.location.href = "/logout";
+  });
 }
