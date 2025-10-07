@@ -1,7 +1,6 @@
 {
   "name": "bulk-mailer",
   "version": "1.0.0",
-  "description": "Bulk Mail Sender with Gmail App Password Login",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
@@ -11,8 +10,5 @@
     "express-session": "^1.17.3",
     "body-parser": "^1.20.2",
     "nodemailer": "^6.9.8"
-  },
-  "engines": {
-    "node": ">=16.x"
   }
 }
