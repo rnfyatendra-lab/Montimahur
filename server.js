@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// ✅ Login route (fixed credentials)
+// Login route
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "Nikkilodhi" && password === "Lodhi882@#") {
@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// 🚀 Bulk Mail Sending
+// Bulk Mail Sending (Gmail App Password)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -58,13 +58,11 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ Mail Not Sent" });
     }
 
-    // Gmail transporter with App Password
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // Bulk send super fast
     await Promise.all(
       recipientList.map(recipient =>
         transporter.sendMail({
@@ -83,7 +81,7 @@ app.post("/send-mail", async (req, res) => {
   }
 });
 
-// Fallback
+// Fallback → Always show login page
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
