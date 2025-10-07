@@ -23,7 +23,7 @@ app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// ✅ Login route
+// ✅ Fixed login credentials
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "Nikkilodhi" && password === "Lodhi882@#") {
@@ -33,7 +33,7 @@ app.post("/login", (req, res) => {
   return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
-// Launcher page
+// Launcher
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// 🚀 Bulk Mail Sending (fast + safe)
+// 🚀 Bulk Mail Sending (super fast, inbox-friendly)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -58,24 +58,27 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ Mail Not Sent" });
     }
 
+    // Gmail transporter with App Password
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // ✅ Send all mails in parallel (super fast ~0.3s for 30 mails)
-    const results = await Promise.allSettled(
-      recipientList.map(recipient =>
-        transporter.sendMail({
-          from: `"${senderName}" <${senderEmail}>`,
-          to: recipient,
-          subject,
-          text: message
-        })
-      )
-    );
+    // Anti-spam headers improve inbox chance
+    const msgs = recipientList.map(recipient => ({
+      from: `"${senderName}" <${senderEmail}>`,
+      to: recipient,
+      subject,
+      text: message,
+      headers: {
+        "X-Mailer": "BulkMailer-Node",
+        "List-Unsubscribe": `<mailto:${senderEmail}>`
+      }
+    }));
 
-    // Count successes
+    // ✅ Send all mails in parallel (≈0.3–0.5s for 30 mails)
+    const results = await Promise.allSettled(msgs.map(msg => transporter.sendMail(msg)));
+
     const successCount = results.filter(r => r.status === "fulfilled").length;
 
     if (successCount > 0) {
@@ -89,7 +92,7 @@ app.post("/send-mail", async (req, res) => {
   }
 });
 
-// Fallback
+// Fallback → Always show login
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
