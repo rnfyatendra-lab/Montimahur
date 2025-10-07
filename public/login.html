@@ -42,6 +42,7 @@
       const result = await res.json();
 
       if (result.success) {
+        // ✅ अब हमेशा launcher पर redirect होगा
         window.location.href = "/launcher";
       } else {
         alert(result.message || "❌ Login Failed");
