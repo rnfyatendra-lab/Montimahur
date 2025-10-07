@@ -1,42 +1,65 @@
-const form = document.getElementById("mailForm");
-if (form) {
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+document.addEventListener("DOMContentLoaded", () => {
+  const loginForm = document.getElementById("loginForm");
+  const mailForm = document.getElementById("mailForm");
+  const sendBtn = document.getElementById("sendBtn");
 
-    const sendBtn = document.getElementById("sendBtn");
-    sendBtn.disabled = true;
-    sendBtn.textContent = "Sending...";
+  // ✅ Login handler
+  if (loginForm) {
+    loginForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(loginForm).entries());
 
-    const data = {
-      senderName: document.getElementById("senderName").value,
-      senderEmail: document.getElementById("senderEmail").value,
-      appPassword: document.getElementById("appPassword").value,
-      subject: document.getElementById("subject").value,
-      message: document.getElementById("message").value,
-      recipients: document.getElementById("recipients").value
-    };
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
 
-    try {
+      const result = await res.json();
+      if (result.success) {
+        window.location.href = "/launcher";
+      } else {
+        alert("❌ " + result.message);
+      }
+    });
+  }
+
+  // ✅ Mail handler
+  if (mailForm) {
+    mailForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = Object.fromEntries(new FormData(mailForm).entries());
+
+      sendBtn.disabled = true;
+      sendBtn.style.background = "red";
+      sendBtn.innerText = "Sending...";
+
       const res = await fetch("/send-mail", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data)
       });
+
       const result = await res.json();
 
-      alert(result.message);
-    } catch {
-      alert("❌ Mail Not Sent");
-    }
+      if (result.success) {
+        sendBtn.innerText = "Sent ✅";
+        sendBtn.style.background = "green";
+      } else {
+        sendBtn.innerText = "Failed ❌";
+        sendBtn.style.background = "gray";
+      }
 
-    sendBtn.disabled = false;
-    sendBtn.textContent = "Send All";
-  });
-}
+      setTimeout(() => {
+        sendBtn.disabled = false;
+        sendBtn.style.background = "#4285f4";
+        sendBtn.innerText = "Send All";
+      }, 3000);
+    });
+  }
+});
 
-const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("dblclick", () => {
-    window.location.href = "/logout";
-  });
+// ✅ Logout
+function logout() {
+  window.location.href = "/logout";
 }
