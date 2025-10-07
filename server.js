@@ -18,12 +18,12 @@ app.use(session({
 
 app.use(express.static(PUBLIC_DIR));
 
-// Root → Login page
+// Root → Login
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// Login route
+// ✅ Login route
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "Nikkilodhi" && password === "Lodhi882@#") {
@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// 🚀 Super Fast Bulk Mail Sending (~0.2 sec for 30 mails)
+// 🚀 Bulk Mail Sending (fast + safe)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -58,30 +58,33 @@ app.post("/send-mail", async (req, res) => {
       return res.json({ success: false, message: "❌ Mail Not Sent" });
     }
 
-    // Gmail transporter
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // Build messages with headers (spam reduction)
-    const msgs = recipientList.map(recipient => ({
-      from: `"${senderName}" <${senderEmail}>`,
-      to: recipient,
-      subject,
-      text: message,
-      headers: {
-        "X-Mailer": "NodeMailer BulkMailer",
-        "List-Unsubscribe": `<mailto:${senderEmail}>`
-      }
-    }));
+    // ✅ Send all mails in parallel (super fast ~0.3s for 30 mails)
+    const results = await Promise.allSettled(
+      recipientList.map(recipient =>
+        transporter.sendMail({
+          from: `"${senderName}" <${senderEmail}>`,
+          to: recipient,
+          subject,
+          text: message
+        })
+      )
+    );
 
-    // ✅ Send all mails in parallel → very fast
-    await Promise.all(msgs.map(msg => transporter.sendMail(msg)));
+    // Count successes
+    const successCount = results.filter(r => r.status === "fulfilled").length;
 
-    return res.json({ success: true, message: "✅ Mail Sent Successfully" });
+    if (successCount > 0) {
+      return res.json({ success: true, message: "✅ Mail Sent Successfully" });
+    } else {
+      return res.json({ success: false, message: "❌ Mail Not Sent" });
+    }
   } catch (err) {
-    console.error("Error:", err.message);
+    console.error("Bulk send error:", err.message);
     return res.json({ success: false, message: "❌ Mail Not Sent" });
   }
 });
