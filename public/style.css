@@ -1,74 +1,27 @@
 body {
   font-family: Arial, sans-serif;
-  background: #f1f3f6;
-  margin: 0;
+  margin: 40px;
 }
 
-.landscape-shell {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+h2 {
+  color: #333;
 }
 
-.landscape-card {
-  background: #fff;
-  padding: 28px;
-  border-radius: 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-  width: 100%;
-  max-width: 1000px;
+textarea, input {
+  width: 300px;
+  padding: 8px;
+  margin-top: 5px;
 }
 
-.landscape-title {
-  text-align: center;
-  margin-bottom: 20px;
-  font-size: 24px;
-  font-weight: bold;
-}
-
-.landscape-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 18px 22px;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-input, textarea {
-  padding: 10px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  width: 100%;
-}
-
-textarea {
-  min-height: 120px;
-  resize: vertical;
-}
-
-.btn {
-  padding: 12px 20px;
-  border: none;
-  border-radius: 8px;
-  background: #4285f4;
+button {
+  background: #007BFF;
   color: white;
+  border: none;
+  padding: 10px 15px;
+  margin-top: 10px;
   cursor: pointer;
-  font-size: 16px;
-  width: 100%;
 }
 
-.btn:hover {
-  background: #3073e0;
-}
-
-@media (max-width: 700px) {
-  .landscape-grid {
-    grid-template-columns: 1fr;
-  }
+button:hover {
+  background: #0056b3;
 }
