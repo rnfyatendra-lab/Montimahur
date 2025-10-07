@@ -1,18 +1,74 @@
-{
-  "name": "bulk-mailer",
-  "version": "1.0.0",
-  "description": "Bulk Mail Sender with Gmail App Password Login",
-  "main": "server.js",
-  "scripts": {
-    "start": "node server.js"
-  },
-  "dependencies": {
-    "express": "^4.18.2",
-    "express-session": "^1.17.3",
-    "body-parser": "^1.20.2",
-    "nodemailer": "^6.9.8"
-  },
-  "engines": {
-    "node": ">=16.x"
+body {
+  font-family: Arial, sans-serif;
+  background: #f1f3f6;
+  margin: 0;
+}
+
+.login-shell, .landscape-shell {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card, .landscape-card {
+  background: #fff;
+  padding: 28px;
+  border-radius: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+  width: 100%;
+  max-width: 900px;
+}
+
+.login-title, .landscape-title {
+  text-align: center;
+  margin-bottom: 20px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.landscape-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px 22px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+input, textarea {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  width: 100%;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.btn {
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  background: #4285f4;
+  color: white;
+  cursor: pointer;
+  font-size: 16px;
+  width: 100%;
+}
+
+.btn:hover {
+  background: #3073e0;
+}
+
+@media (max-width: 700px) {
+  .landscape-grid {
+    grid-template-columns: 1fr;
   }
 }
