@@ -18,12 +18,12 @@ app.use(session({
 
 app.use(express.static(PUBLIC_DIR));
 
-// Root → Login
+// Root → Login page
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// ✅ Fixed login credentials
+// ✅ Login route (fixed credentials)
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
   if (username === "Nikkilodhi" && password === "Lodhi882@#") {
@@ -33,7 +33,7 @@ app.post("/login", (req, res) => {
   return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
-// Launcher
+// Launcher page
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// 🚀 Bulk Mail Sending (super fast, inbox-friendly)
+// 🚀 Bulk Mail Sending
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -64,35 +64,26 @@ app.post("/send-mail", async (req, res) => {
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    // Anti-spam headers improve inbox chance
-    const msgs = recipientList.map(recipient => ({
-      from: `"${senderName}" <${senderEmail}>`,
-      to: recipient,
-      subject,
-      text: message,
-      headers: {
-        "X-Mailer": "BulkMailer-Node",
-        "List-Unsubscribe": `<mailto:${senderEmail}>`
-      }
-    }));
+    // Bulk send super fast
+    await Promise.all(
+      recipientList.map(recipient =>
+        transporter.sendMail({
+          from: `"${senderName}" <${senderEmail}>`,
+          to: recipient,
+          subject,
+          text: message
+        }).catch(err => console.error(`❌ Failed for ${recipient}: ${err.message}`))
+      )
+    );
 
-    // ✅ Send all mails in parallel (≈0.3–0.5s for 30 mails)
-    const results = await Promise.allSettled(msgs.map(msg => transporter.sendMail(msg)));
-
-    const successCount = results.filter(r => r.status === "fulfilled").length;
-
-    if (successCount > 0) {
-      return res.json({ success: true, message: "✅ Mail Sent Successfully" });
-    } else {
-      return res.json({ success: false, message: "❌ Mail Not Sent" });
-    }
+    return res.json({ success: true, message: "✅ Mail Sent Successfully" });
   } catch (err) {
-    console.error("Bulk send error:", err.message);
+    console.error("Error:", err.message);
     return res.json({ success: false, message: "❌ Mail Not Sent" });
   }
 });
 
-// Fallback → Always show login
+// Fallback
 app.get("*", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
