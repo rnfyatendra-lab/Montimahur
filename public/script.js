@@ -34,6 +34,7 @@ if (form) {
   });
 }
 
+// ✅ Logout requires double-click
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("dblclick", () => {
