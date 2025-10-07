@@ -1,101 +1,62 @@
-const express = require("express");
-const session = require("express-session");
-const bodyParser = require("body-parser");
-const nodemailer = require("nodemailer");
-const path = require("path");
+import express from "express";
+import nodemailer from "nodemailer";
+import bodyParser from "body-parser";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PUBLIC_DIR = path.join(__dirname, "public");
+const PORT = 3000;
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
-app.use(session({
-  secret: "bulkmail_secret",
-  resave: false,
-  saveUninitialized: false
-}));
-
-app.use(express.static(PUBLIC_DIR));
-
-// Root → Login
-app.get("/", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "login.html"));
-});
-
-// ✅ Fixed login credentials
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  if (username === "Nikkilodhi" && password === "Lodhi882@#") {
-    req.session.user = username;
-    return res.json({ success: true });
-  }
-  return res.json({ success: false, message: "❌ Invalid credentials" });
-});
-
-// Launcher
-app.get("/launcher", (req, res) => {
-  if (!req.session.user) return res.redirect("/");
-  res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
-});
-
-// Logout
-app.get("/logout", (req, res) => {
-  req.session.destroy(() => res.redirect("/"));
-});
-
-// 🚀 Bulk Mail Sending (super fast, inbox-friendly)
-app.post("/send-mail", async (req, res) => {
-  try {
-    const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
-
-    let recipientList = recipients
-      .split(/[\n,;,\s]+/)
-      .map(r => r.trim())
-      .filter(r => r);
-
-    if (recipientList.length === 0) {
-      return res.json({ success: false, message: "❌ Mail Not Sent" });
-    }
-
-    // Gmail transporter with App Password
-    let transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: { user: senderEmail, pass: appPassword }
-    });
-
-    // Anti-spam headers improve inbox chance
-    const msgs = recipientList.map(recipient => ({
-      from: `"${senderName}" <${senderEmail}>`,
-      to: recipient,
-      subject,
-      text: message,
-      headers: {
-        "X-Mailer": "BulkMailer-Node",
-        "List-Unsubscribe": `<mailto:${senderEmail}>`
-      }
-    }));
-
-    // ✅ Send all mails in parallel (≈0.3–0.5s for 30 mails)
-    const results = await Promise.allSettled(msgs.map(msg => transporter.sendMail(msg)));
-
-    const successCount = results.filter(r => r.status === "fulfilled").length;
-
-    if (successCount > 0) {
-      return res.json({ success: true, message: "✅ Mail Sent Successfully" });
-    } else {
-      return res.json({ success: false, message: "❌ Mail Not Sent" });
-    }
-  } catch (err) {
-    console.error("Bulk send error:", err.message);
-    return res.json({ success: false, message: "❌ Mail Not Sent" });
+// SMTP Transport (अपने SMTP settings डालें)
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: "your_email@gmail.com",  // अपना mail
+    pass: "your_app_password"      // Gmail App Password
   }
 });
 
-// Fallback → Always show login
-app.get("*", (req, res) => {
-  res.sendFile(path.join(PUBLIC_DIR, "login.html"));
+// Bulk Mail API
+app.post("/send-bulk", async (req, res) => {
+  const { recipients, subject, body } = req.body;
+
+  if (!recipients || recipients.length === 0) {
+    return res.status(400).json({ error: "Recipients missing" });
+  }
+
+  let sentCount = 0;
+
+  for (let i = 0; i < recipients.length; i++) {
+    const mailOptions = {
+      from: "your_email@gmail.com",
+      to: recipients[i],
+      subject: subject,
+      text: body
+    };
+
+    try {
+      await transporter.sendMail(mailOptions);
+      sentCount++;
+      console.log(`✅ Sent to ${recipients[i]}`);
+    } catch (err) {
+      console.log(`❌ Failed to ${recipients[i]} : ${err}`);
+    }
+
+    // Delay 0.4–0.5 sec
+    await new Promise(resolve => setTimeout(resolve, 450));
+  }
+
+  res.json({ message: `Sent ${sentCount} / ${recipients.length} emails` });
 });
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 Bulk Mailer running on port ${PORT}`));
+app.listen(PORT, () => {
+  console.log(`🚀 Server running at http://localhost:${PORT}`);
+});
