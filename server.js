@@ -18,22 +18,22 @@ app.use(session({
 
 app.use(express.static(PUBLIC_DIR));
 
-// Root → Login
+// Root → Login page
 app.get("/", (req, res) => {
   res.sendFile(path.join(PUBLIC_DIR, "login.html"));
 });
 
-// Login
+// Login route
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
-  if (username === "Lodhiyatendra" && password === "lodhi882@#") {
+  if (username === "Nikkilodhi" && password === "Lodhi882@#") {
     req.session.user = username;
     return res.json({ success: true });
   }
   return res.json({ success: false, message: "❌ Invalid credentials" });
 });
 
-// Launcher
+// Launcher page
 app.get("/launcher", (req, res) => {
   if (!req.session.user) return res.redirect("/");
   res.sendFile(path.join(PUBLIC_DIR, "launcher.html"));
@@ -44,7 +44,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// 🚀 FAST Bulk Mail Sending (0.1 sec per mail)
+// 🚀 Super Fast Bulk Mail Sending (~0.2 sec for 30 mails)
 app.post("/send-mail", async (req, res) => {
   try {
     const { senderName, senderEmail, appPassword, subject, message, recipients } = req.body;
@@ -55,36 +55,34 @@ app.post("/send-mail", async (req, res) => {
       .filter(r => r);
 
     if (recipientList.length === 0) {
-      return res.json({ success: false, message: "❌ No valid recipients" });
+      return res.json({ success: false, message: "❌ Mail Not Sent" });
     }
 
+    // Gmail transporter
     let transporter = nodemailer.createTransport({
       service: "gmail",
       auth: { user: senderEmail, pass: appPassword }
     });
 
-    let successCount = 0;
-
-    for (let recipient of recipientList) {
-      try {
-        await transporter.sendMail({
-          from: `"${senderName}" <${senderEmail}>`,
-          to: recipient,
-          subject,
-          text: message
-        });
-        successCount++;
-      } catch (err) {
-        console.error(`❌ Failed for ${recipient}:`, err.message);
+    // Build messages with headers (spam reduction)
+    const msgs = recipientList.map(recipient => ({
+      from: `"${senderName}" <${senderEmail}>`,
+      to: recipient,
+      subject,
+      text: message,
+      headers: {
+        "X-Mailer": "NodeMailer BulkMailer",
+        "List-Unsubscribe": `<mailto:${senderEmail}>`
       }
+    }));
 
-      // ✅ छोटा delay (0.1 sec) हर mail के बीच
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
+    // ✅ Send all mails in parallel → very fast
+    await Promise.all(msgs.map(msg => transporter.sendMail(msg)));
 
-    return res.json({ success: true, message: `✅ ${successCount}/${recipientList.length} mails sent` });
+    return res.json({ success: true, message: "✅ Mail Sent Successfully" });
   } catch (err) {
-    return res.json({ success: false, message: err.message });
+    console.error("Error:", err.message);
+    return res.json({ success: false, message: "❌ Mail Not Sent" });
   }
 });
 
