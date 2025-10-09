@@ -1,32 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Nikkilodhi - Bulk Mailer</title>
-  <link rel="stylesheet" href="style.css">
+<meta charset="UTF-8">
+<title>Fast Mail Launcher</title>
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="box">
-    <form id="mailForm">
-      <h2>📨 Nikkilodhi</h2>
-      <div class="row">
-        <input type="text" name="senderName" placeholder="Sender Name" required>
-        <input type="email" name="senderEmail" placeholder="Your Gmail" required>
-      </div>
-      <div class="row">
-        <input type="password" name="appPassword" placeholder="Gmail App Password" required>
-        <input type="text" name="subject" placeholder="Subject" required>
-      </div>
-      <div class="row full">
-        <textarea name="message" placeholder="Message Body" required></textarea>
-        <textarea name="recipients" placeholder="Recipients (comma, newline, semicolon separated)" required></textarea>
-      </div>
-      <div class="row buttons">
-        <button id="sendBtn" type="submit">Send All</button>
-        <button type="button" onclick="logout()">Logout</button>
-      </div>
-    </form>
+<div class="form-grid">
+  <h2>📧 Fast Mail Launcher</h2>
+
+  <div class="grid-row">
+    <input id="senderName" placeholder="Sender Name">
+    <input id="email" placeholder="Your Gmail">
   </div>
-  <script src="script.js"></script>
+
+  <div class="grid-row">
+    <input id="pass" type="password" placeholder="App Password">
+    <input id="subject" placeholder="Subject">
+  </div>
+
+  <div class="grid-row">
+    <textarea id="message" placeholder="Message Body"></textarea>
+    <textarea id="recipients" placeholder="Recipients (comma or newline)"></textarea>
+  </div>
+
+  <div class="grid-row">
+    <button id="sendBtn">Send All</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+
+  <p id="statusMessage"></p>
+</div>
+
+<script src="script.js"></script>
 </body>
 </html>
