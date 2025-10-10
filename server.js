@@ -1,3 +1,4 @@
+// server.js
 require('dotenv').config();
 const express = require('express');
 const session = require('express-session');
@@ -101,7 +102,7 @@ app.post('/send', requireAuth, async (req, res) => {
 
     // Prepare mails
     const mails = recipientList.map(r => ({
-      from: "${senderName || 'Anonymous'}" <${email}>,
+      from: `"${senderName || 'Anonymous'}" <${email}>`,
       to: r,
       subject: subject || "No Subject",
       text: message || ""
@@ -110,7 +111,7 @@ app.post('/send', requireAuth, async (req, res) => {
     // Send mails in batches (parallel within batch)
     await sendBatch(transporter, mails, 5); // 5 mails parallel
 
-    return res.json({ success: true, message: ✅ Mail sent to ${recipientList.length} });
+    return res.json({ success: true, message: `✅ Mail sent to ${recipientList.length}` });
 
   } catch (err) {
     console.error("Send error:", err);
@@ -120,5 +121,5 @@ app.post('/send', requireAuth, async (req, res) => {
 
 // Start server
 app.listen(PORT, () => {
-  console.log(🚀 Server running on port ${PORT});
+  console.log(`🚀 Server running on port ${PORT}`);
 });
