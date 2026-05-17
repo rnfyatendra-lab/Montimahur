@@ -1,10 +1,17 @@
 from flask import Flask, render_template, request, redirect, url_for, session
 from email.mime.text import MIMEText
 import smtplib
+import time
 
 app = Flask(__name__)
 
 app.secret_key = "fastmailer"
+
+
+# SPEED SETTINGS
+BATCH_SIZE = 5
+BATCH_DELAY = 300
+DAILY_LIMIT = 500
 
 
 # LOGIN
@@ -32,7 +39,6 @@ def launcher():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    # DEFAULT VALUES
     data = {
         "sender_name": "",
         "gmail": "",
@@ -43,7 +49,6 @@ def launcher():
     }
 
     message = ""
-    total_sent = 0
 
     if request.method == "POST":
 
@@ -54,7 +59,7 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # SAVE OLD DATA
+        # SAVE DATA
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -68,7 +73,6 @@ def launcher():
 
             emails = []
 
-            # SPLIT EMAILS
             for line in recipients.splitlines():
 
                 if "," in line:
@@ -89,6 +93,9 @@ def launcher():
                     if line:
                         emails.append(line)
 
+            # LIMIT
+            emails = emails[:DAILY_LIMIT]
+
             # SMTP
             server = smtplib.SMTP("smtp.gmail.com", 587)
 
@@ -98,22 +105,13 @@ def launcher():
 
             sent = 0
 
-            for receiver in emails:
+            for index, receiver in enumerate(emails):
 
                 html = f"""
                 <html>
                 <body>
 
-                <h3>Hello</h3>
-
                 <p>{body}</p>
-
-                <br>
-
-                <p>
-                Thanks<br>
-                {sender_name}
-                </p>
 
                 </body>
                 </html>
@@ -122,7 +120,10 @@ def launcher():
                 msg = MIMEText(html, "html")
 
                 msg["Subject"] = subject
-                msg["From"] = gmail
+
+                # ONLY NAME
+                msg["From"] = f"{sender_name} <{gmail}>"
+
                 msg["To"] = receiver
 
                 server.sendmail(
@@ -133,9 +134,21 @@ def launcher():
 
                 sent += 1
 
+                # BATCH DELAY
+                if sent % BATCH_SIZE == 0:
+                    time.sleep(BATCH_DELAY / 1000)
+
             server.quit()
 
-            total_sent = sent
+            # AUTO RESET AFTER SEND
+            data = {
+                "sender_name": "",
+                "gmail": "",
+                "app_password": "",
+                "subject": "",
+                "body": "",
+                "recipients": ""
+            }
 
             message = f"Send {sent}"
 
@@ -146,7 +159,6 @@ def launcher():
     return render_template(
         "launcher.html",
         message=message,
-        total_sent=total_sent,
         data=data
     )
 
