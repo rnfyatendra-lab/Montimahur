@@ -18,7 +18,7 @@ body{
     width:1200px;
     background:white;
     margin:auto;
-    margin-top:60px;
+    margin-top:40px;
     border-radius:20px;
     padding:40px;
 }
@@ -68,8 +68,9 @@ textarea{
     cursor:pointer;
 }
 
-.send button:hover{
-    background:#2563eb;
+.send button:disabled{
+    background:gray;
+    cursor:not-allowed;
 }
 
 .logout button{
@@ -85,15 +86,7 @@ textarea{
 .message{
     text-align:center;
     color:green;
-    font-size:28px;
-    margin-bottom:20px;
-    font-weight:bold;
-}
-
-.counter{
-    text-align:center;
-    color:#2563eb;
-    font-size:22px;
+    font-size:40px;
     margin-bottom:20px;
     font-weight:bold;
 }
@@ -122,17 +115,7 @@ textarea{
 
 {% endif %}
 
-{% if total_sent > 0 %}
-
-<div class="counter">
-
-Total Sent : {{total_sent}}
-
-</div>
-
-{% endif %}
-
-<form method="POST">
+<form method="POST" id="mailForm">
 
 <div class="row">
 
@@ -194,7 +177,10 @@ required
 
 <div class="send">
 
-<button type="submit">
+<button
+type="submit"
+id="sendBtn"
+>
 
 Send All
 
@@ -204,15 +190,14 @@ Send All
 
 <div class="logout">
 
-<a href="/logout">
-
-<button type="button">
+<button
+type="button"
+ondblclick="window.location.href='/logout'"
+>
 
 Logout
 
 </button>
-
-</a>
 
 </div>
 
@@ -221,6 +206,21 @@ Logout
 </form>
 
 </div>
+
+<script>
+
+const form = document.getElementById("mailForm");
+const sendBtn = document.getElementById("sendBtn");
+
+form.addEventListener("submit", function(){
+
+    sendBtn.disabled = true;
+
+    sendBtn.innerText = "Sending";
+
+});
+
+</script>
 
 </body>
 </html>
