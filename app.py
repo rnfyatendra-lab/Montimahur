@@ -1,25 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 import ssl
 import time
+import re
 
 app = Flask(__name__)
-
 app.secret_key = "fastmailer"
 
 
-# =========================
-# SPEED SETTINGS
-# =========================
+# SAFE RATE LIMITS
 BATCH_SIZE = 5
-BATCH_DELAY = 300
-DAILY_LIMIT = 500
+BATCH_DELAY = 5
+DAILY_LIMIT = 100
 
 
-# =========================
-# LOGIN
-# =========================
 @app.route("/", methods=["GET", "POST"])
 def login():
 
@@ -34,23 +30,24 @@ def login():
 
             return redirect(url_for("launcher"))
 
-        else:
-
-            flash("Wrong Login")
+        flash("Wrong Login")
 
     return render_template("login.html")
 
 
-# =========================
-# MAILER
-# =========================
+def valid_email(email):
+
+    pattern = r'^[^@]+@[^@]+\.[^@]+$'
+
+    return re.match(pattern, email)
+
+
 @app.route("/launcher", methods=["GET", "POST"])
 def launcher():
 
     if "user" not in session:
         return redirect(url_for("login"))
 
-    # KEEP DATA
     data = {
         "sender_name": "",
         "gmail": "",
@@ -71,7 +68,6 @@ def launcher():
         body = request.form.get("body", "").strip()
         recipients = request.form.get("recipients", "").strip()
 
-        # SAVE CURRENT VALUES
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -85,7 +81,6 @@ def launcher():
 
             emails = []
 
-            # SPLIT EMAILS
             for line in recipients.splitlines():
 
                 if "," in line:
@@ -96,25 +91,23 @@ def launcher():
 
                         p = p.strip()
 
-                        if p:
+                        if p and valid_email(p):
                             emails.append(p)
 
                 else:
 
                     line = line.strip()
 
-                    if line:
+                    if line and valid_email(line):
                         emails.append(line)
 
-            # REMOVE DUPLICATES
             emails = list(dict.fromkeys(emails))
 
-            # DAILY LIMIT
             emails = emails[:DAILY_LIMIT]
 
             if len(emails) == 0:
 
-                flash("No Recipients Found")
+                flash("No valid recipients")
 
                 return render_template(
                     "launcher.html",
@@ -122,7 +115,6 @@ def launcher():
                     total_sent=0
                 )
 
-            # SMTP
             context = ssl.create_default_context()
 
             server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -135,12 +127,15 @@ def launcher():
 
             for receiver in emails:
 
-                # KEEP SAME TEMPLATE LINES
+                msg = MIMEMultipart("alternative")
+
+                plain_text = body
+
                 html_body = body.replace("\n", "<br>")
 
                 html = f"""
                 <html>
-                <body style="font-family:Arial;font-size:16px;color:#222;line-height:1.6;">
+                <body style="font-family:Arial;font-size:16px;line-height:1.6;color:#222;">
 
                 {html_body}
 
@@ -148,14 +143,14 @@ def launcher():
                 </html>
                 """
 
-                msg = MIMEText(html, "html")
+                msg.attach(MIMEText(plain_text, "plain"))
+                msg.attach(MIMEText(html, "html"))
 
                 msg["Subject"] = subject
-
-                # ONLY NAME SHOW
                 msg["From"] = f"{sender_name} <{gmail}>"
-
                 msg["To"] = receiver
+
+                msg["Reply-To"] = gmail
 
                 server.sendmail(
                     gmail,
@@ -165,16 +160,13 @@ def launcher():
 
                 sent += 1
 
-                # SPEED CONTROL
                 if sent % BATCH_SIZE == 0:
-
-                    time.sleep(BATCH_DELAY / 1000)
+                    time.sleep(BATCH_DELAY)
 
             server.quit()
 
             total_sent = sent
 
-            # SUCCESS POPUP
             flash(f"Send {sent}")
 
         except Exception as e:
@@ -188,9 +180,6 @@ def launcher():
     )
 
 
-# =========================
-# LOGOUT
-# =========================
 @app.route("/logout")
 def logout():
 
@@ -199,9 +188,6 @@ def logout():
     return redirect(url_for("login"))
 
 
-# =========================
-# RUN
-# =========================
 if __name__ == "__main__":
 
     app.run(
