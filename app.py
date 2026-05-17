@@ -28,9 +28,6 @@ SAFE_WORDS = {
     "act now": "respond soon"
 }
 
-
-# RANDOM OPENERS
-
 # CLEAN MESSAGE
 def clean_message(text):
 
