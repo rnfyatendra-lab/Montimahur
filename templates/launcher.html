@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <title>Fast Mail Launcher</title>
@@ -8,114 +7,104 @@
 <style>
 
 body{
-    margin:0;
-    padding:0;
-    background:#edf0f5;
-    font-family:Arial;
+background:#f2f5f9;
+font-family:Arial;
 }
 
-.container{
-    width:1200px;
-    background:white;
-    margin:auto;
-    margin-top:40px;
-    border-radius:20px;
-    padding:40px;
+.box{
+width:80%;
+margin:auto;
+margin-top:40px;
+background:white;
+padding:40px;
+border-radius:20px;
 }
 
-.top{
-    text-align:center;
-    margin-bottom:30px;
+h1{
+text-align:center;
 }
 
 .row{
-    display:flex;
-    gap:20px;
-    margin-bottom:20px;
+display:flex;
+gap:20px;
+margin-bottom:20px;
 }
 
 input, textarea{
-    flex:1;
-    padding:18px;
-    border:1px solid #dcdcdc;
-    border-radius:15px;
-    font-size:18px;
+width:100%;
+padding:20px;
+border-radius:15px;
+border:1px solid #ccc;
+font-size:20px;
 }
 
 textarea{
-    height:180px;
-    resize:none;
+height:200px;
+resize:none;
 }
 
-.bottom{
-    display:flex;
-    gap:20px;
-    align-items:center;
+button{
+width:100%;
+padding:20px;
+font-size:30px;
+border:none;
+border-radius:15px;
+background:#4285f4;
+color:white;
+cursor:pointer;
 }
 
-.send{
-    flex:1;
+.logout{
+width:180px;
 }
 
-.send button{
-    width:100%;
-    padding:20px;
-    background:#3b82f6;
-    color:white;
-    border:none;
-    border-radius:15px;
-    font-size:28px;
-    cursor:pointer;
+.popup{
+position:fixed;
+top:20px;
+right:20px;
+background:#222;
+color:white;
+padding:20px;
+border-radius:10px;
+z-index:9999;
 }
 
-.send button:disabled{
-    background:gray;
-    cursor:not-allowed;
-}
-
-.logout button{
-    padding:20px 30px;
-    background:#3b82f6;
-    color:white;
-    border:none;
-    border-radius:15px;
-    font-size:22px;
-    cursor:pointer;
-}
-
-.message{
-    text-align:center;
-    color:green;
-    font-size:40px;
-    margin-bottom:20px;
-    font-weight:bold;
+.okbtn{
+margin-top:10px;
+padding:10px 20px;
+background:#4285f4;
+color:white;
+border:none;
+border-radius:10px;
+cursor:pointer;
 }
 
 </style>
 
 </head>
-
 <body>
 
-<div class="container">
-
-<div class="top">
+<div class="box">
 
 <h1>📧 Fast Mail Launcher</h1>
 
-</div>
+{% with messages = get_flashed_messages() %}
+{% if messages %}
 
-{% if message %}
+<div class="popup" id="popup">
 
-<div class="message">
+{{ messages[0] }}
 
-{{message}}
+<br>
+
+<button class="okbtn" onclick="closePopup()">OK</button>
 
 </div>
 
 {% endif %}
+{% endwith %}
 
-<form method="POST" id="mailForm">
+<form method="POST">
 
 <div class="row">
 
@@ -123,7 +112,7 @@ textarea{
 type="text"
 name="sender_name"
 placeholder="Sender Name"
-value="{{data.sender_name}}"
+value="{{ data.sender_name }}"
 required
 >
 
@@ -131,7 +120,7 @@ required
 type="email"
 name="gmail"
 placeholder="Your Gmail"
-value="{{data.gmail}}"
+value="{{ data.gmail }}"
 required
 >
 
@@ -143,7 +132,7 @@ required
 type="password"
 name="app_password"
 placeholder="App Password"
-value="{{data.app_password}}"
+value="{{ data.app_password }}"
 required
 >
 
@@ -151,7 +140,7 @@ required
 type="text"
 name="subject"
 placeholder="Subject"
-value="{{data.subject}}"
+value="{{ data.subject }}"
 required
 >
 
@@ -163,43 +152,37 @@ required
 name="body"
 placeholder="Message Body"
 required
->{{data.body}}</textarea>
+>{{ data.body }}</textarea>
 
 <textarea
 name="recipients"
-placeholder="Recipients (comma or newline)"
+placeholder="Recipients"
 required
->{{data.recipients}}</textarea>
+>{{ data.recipients }}</textarea>
 
 </div>
 
-<div class="bottom">
+<div class="row">
 
-<div class="send">
-
-<button
-type="submit"
-id="sendBtn"
->
+<button id="sendbtn" type="submit">
 
 Send All
 
 </button>
 
-</div>
-
-<div class="logout">
+<a href="/logout">
 
 <button
 type="button"
-ondblclick="window.location.href='/logout'"
+class="logout"
+ondblclick="window.location='/logout'"
 >
 
 Logout
 
 </button>
 
-</div>
+</a>
 
 </div>
 
@@ -209,16 +192,21 @@ Logout
 
 <script>
 
-const form = document.getElementById("mailForm");
-const sendBtn = document.getElementById("sendBtn");
+const form = document.querySelector("form");
+const btn = document.getElementById("sendbtn");
 
 form.addEventListener("submit", function(){
 
-    sendBtn.disabled = true;
-
-    sendBtn.innerText = "Sending";
+btn.innerText = "Sending...";
+btn.disabled = true;
 
 });
+
+function closePopup(){
+
+document.getElementById("popup").style.display = "none";
+
+}
 
 </script>
 
