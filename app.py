@@ -11,9 +11,9 @@ app.secret_key = "fastmailer"
 
 
 # SAFE LIMITS
-BATCH_SIZE = 1
-BATCH_DELAY = 25
-HOURLY_LIMIT = 28
+const BATCH_SIZE = 5;
+const BATCH_DELAY = 300;
+const DAILY_LIMIT = 500;
 
 
 # SAFE WORD FILTER
