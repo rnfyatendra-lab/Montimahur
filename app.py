@@ -9,8 +9,6 @@ app = Flask(__name__)
 
 app.secret_key = "fastmailer"
 
-
-# SAFE LIMITS
 const BATCH_SIZE = 5;
 const BATCH_DELAY = 300;
 const DAILY_LIMIT = 500;
