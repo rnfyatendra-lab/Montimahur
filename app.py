@@ -4,37 +4,32 @@ from email.mime.text import MIMEText
 import smtplib
 import time
 import re
-import random
 
 app = Flask(__name__)
 
 app.secret_key = "fastmailer"
 
 
-# =========================
-# ULTRA SAFE SETTINGS
-# =========================
-
-BATCH_SIZE = 2
-
-# RANDOM SAFE DELAY
-MIN_DELAY = 8
-MAX_DELAY = 15
-
-# 1 HOUR LIMIT
+# SAFE LIMITS
+BATCH_SIZE = 1
+BATCH_DELAY = 25
 HOURLY_LIMIT = 28
 
 
-# =========================
-# MAIL TRACKER
-# =========================
+# SAFE WORD FILTER
+SAFE_WORDS = {
+    "free": "complimentary",
+    "urgent": "important",
+    "buy now": "learn more",
+    "click here": "view details",
+    "winner": "selected",
+    "cheap": "affordable",
+    "guarantee": "assurance",
+    "act now": "respond soon"
+}
 
-mail_tracker = {}
 
-# =========================
-# CLEAN MESSAGE
-# =========================
-
+# CLEAN TEXT
 def clean_message(text):
 
     result = text
@@ -48,10 +43,7 @@ def clean_message(text):
     return result
 
 
-# =========================
 # LOGIN
-# =========================
-
 @app.route("/", methods=["GET", "POST"])
 def login():
 
@@ -66,19 +58,19 @@ def login():
 
             return redirect(url_for("launcher"))
 
-        flash("Invalid Login")
+        else:
+
+            flash("Wrong Login")
 
     return render_template("login.html")
 
 
-# =========================
 # MAILER
-# =========================
-
 @app.route("/launcher", methods=["GET", "POST"])
 def launcher():
 
     if "user" not in session:
+
         return redirect(url_for("login"))
 
     data = {
@@ -99,7 +91,7 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # SAVE CURRENT DATA
+        # KEEP INPUT DATA
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -111,51 +103,31 @@ def launcher():
 
         try:
 
-            current_time = time.time()
-
-            # NEW ACCOUNT
-            if gmail not in mail_tracker:
-
-                mail_tracker[gmail] = {
-                    "count": 0,
-                    "start": current_time
-                }
-
-            # RESET AFTER 1 HOUR
-            elapsed = current_time - mail_tracker[gmail]["start"]
-
-            if elapsed > 3600:
-
-                mail_tracker[gmail]["count"] = 0
-                mail_tracker[gmail]["start"] = current_time
-
-            # EMAIL LIST
             emails = []
 
             for line in recipients.splitlines():
 
-                if "," in line:
+                line = line.strip()
 
-                    parts = line.split(",")
+                if line:
 
-                    for p in parts:
+                    if "," in line:
 
-                        p = p.strip()
+                        parts = line.split(",")
 
-                        if p:
-                            emails.append(p)
+                        for p in parts:
 
-                else:
+                            p = p.strip()
 
-                    line = line.strip()
+                            if p:
+                                emails.append(p)
 
-                    if line:
+                    else:
+
                         emails.append(line)
 
-            # LIMIT CHECK
-            current_count = mail_tracker[gmail]["count"]
-
-            if current_count + len(emails) > HOURLY_LIMIT:
+            # LIMIT
+            if len(emails) > HOURLY_LIMIT:
 
                 flash("Limit Full")
 
@@ -164,10 +136,9 @@ def launcher():
                     data=data
                 )
 
-            # CLEAN BODY
+            # SAFE BODY
             cleaned_body = clean_message(body)
 
-            # KEEP SAME LINES
             html_body = cleaned_body.replace("\n", "<br>")
 
             # SMTP
@@ -181,24 +152,7 @@ def launcher():
 
             for receiver in emails:
 
-                html = f"""
-                <html>
-                <body style="font-family:Arial;font-size:16px;line-height:1.6;color:#222;">
-
-                {html_body}
-
-                </body>
-                </html>
-                """
-
-                # MULTIPART
                 msg = MIMEMultipart("alternative")
-
-                # PLAIN TEXT
-                msg.attach(MIMEText(cleaned_body, "plain"))
-
-                # HTML
-                msg.attach(MIMEText(html, "html"))
 
                 msg["Subject"] = subject
 
@@ -206,6 +160,20 @@ def launcher():
                 msg["From"] = f"{sender_name} <{gmail}>"
 
                 msg["To"] = receiver
+
+                plain_text = cleaned_body
+
+                html = f"""
+                <html>
+                <body style="font-family:Arial;font-size:16px;color:#222;line-height:1.6;">
+                {html_body}
+                </body>
+                </html>
+                """
+
+                msg.attach(MIMEText(plain_text, "plain"))
+
+                msg.attach(MIMEText(html, "html"))
 
                 server.sendmail(
                     gmail,
@@ -215,14 +183,10 @@ def launcher():
 
                 sent += 1
 
-                mail_tracker[gmail]["count"] += 1
-
-                # SAFE RANDOM DELAY
+                # SAFE DELAY
                 if sent % BATCH_SIZE == 0:
 
-                    delay = random.randint(MIN_DELAY, MAX_DELAY)
-
-                    time.sleep(delay)
+                    time.sleep(BATCH_DELAY)
 
             server.quit()
 
@@ -238,10 +202,7 @@ def launcher():
     )
 
 
-# =========================
 # LOGOUT
-# =========================
-
 @app.route("/logout")
 def logout():
 
@@ -249,10 +210,6 @@ def logout():
 
     return redirect(url_for("login"))
 
-
-# =========================
-# RUN
-# =========================
 
 if __name__ == "__main__":
 
