@@ -1,32 +1,42 @@
 from flask import Flask, render_template, request, redirect, url_for, session
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 import time
+import random
 import re
 
 app = Flask(__name__)
 
 app.secret_key = "fastmailer"
 
-# SPEED
-BATCH_SIZE = 6
-BATCH_DELAY = 400
-DAILY_LIMIT = 600
+# SAFE SPEED
+BATCH_SIZE = 3
+BATCH_DELAY = 2000
+DAILY_LIMIT = 100
 
 
-# SAFE WORD REPLACER
+# SAFE WORDS
 SAFE_WORDS = {
     "free": "complimentary",
-    "buy now": "learn more",
     "urgent": "important",
+    "buy now": "learn more",
     "click here": "view details",
     "winner": "selected",
-    "guarantee": "assurance",
     "cheap": "affordable",
-    "earn money": "grow income",
-    "act now": "respond soon",
-    "limited offer": "available opportunity"
+    "guarantee": "assurance",
+    "act now": "respond soon"
 }
+
+
+# RANDOM OPENERS
+OPENERS = [
+    "Hope you're doing well.",
+    "I hope your week is going smoothly.",
+    "I wanted to quickly reach out regarding your website.",
+    "I came across your website recently.",
+    "I noticed something interesting about your site."
+]
 
 
 # CLEAN MESSAGE
@@ -88,7 +98,7 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # SAVE DATA
+        # KEEP DATA
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -102,7 +112,7 @@ def launcher():
 
             emails = []
 
-            # SPLIT EMAILS
+            # EMAIL SPLIT
             for line in recipients.splitlines():
 
                 if "," in line:
@@ -125,10 +135,10 @@ def launcher():
 
             emails = emails[:DAILY_LIMIT]
 
-            # SAFE MESSAGE
+            # CLEAN BODY
             cleaned_body = clean_message(body)
 
-            # KEEP TEMPLATE LINES
+            # KEEP LINE STRUCTURE
             html_body = cleaned_body.replace("\n", "<br>")
 
             # SMTP
@@ -142,21 +152,46 @@ def launcher():
 
             for receiver in emails:
 
-                html = f"""
-                <html>
-                <body style="font-family:Arial;font-size:16px;line-height:1.6;">
+                # RANDOM OPENER
+                opener = random.choice(OPENERS)
 
-                {html_body}
+                final_html = f"""
+                <html>
+                <body style="font-family:Arial;font-size:16px;line-height:1.6;color:#222;">
+
+                <p>{opener}</p>
+
+                <p>{html_body}</p>
+
+                <br>
+
+                <p style="font-size:12px;color:gray;">
+                If you'd prefer not to receive future emails,
+                reply with unsubscribe.
+                </p>
 
                 </body>
                 </html>
                 """
 
-                msg = MIMEText(html, "html")
+                # MULTIPART EMAIL
+                msg = MIMEMultipart("alternative")
+
+                plain_text = f"""
+{opener}
+
+{cleaned_body}
+
+If you'd prefer not to receive future emails,
+reply with unsubscribe.
+"""
+
+                msg.attach(MIMEText(plain_text, "plain"))
+                msg.attach(MIMEText(final_html, "html"))
 
                 msg["Subject"] = subject
 
-                # ONLY NAME
+                # ONLY NAME SHOW
                 msg["From"] = f"{sender_name} <{gmail}>"
 
                 msg["To"] = receiver
@@ -169,7 +204,7 @@ def launcher():
 
                 sent += 1
 
-                # SPEED CONTROL
+                # SAFE DELAY
                 if sent % BATCH_SIZE == 0:
 
                     time.sleep(BATCH_DELAY / 1000)
