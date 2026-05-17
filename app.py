@@ -12,7 +12,7 @@ app.secret_key = "fastmailer"
 
 # SAFE SPEED
 BATCH_SIZE = 3
-BATCH_DELAY = 2000
+BATCH_DELAY = 1000
 DAILY_LIMIT = 100
 
 
@@ -30,14 +30,6 @@ SAFE_WORDS = {
 
 
 # RANDOM OPENERS
-OPENERS = [
-    "Hope you're doing well.",
-    "I hope your week is going smoothly.",
-    "I wanted to quickly reach out regarding your website.",
-    "I came across your website recently.",
-    "I noticed something interesting about your site."
-]
-
 
 # CLEAN MESSAGE
 def clean_message(text):
@@ -182,8 +174,6 @@ def launcher():
 
 {cleaned_body}
 
-If you'd prefer not to receive future emails,
-reply with unsubscribe.
 """
 
                 msg.attach(MIMEText(plain_text, "plain"))
