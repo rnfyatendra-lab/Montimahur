@@ -3,7 +3,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
 import time
-import random
 import re
 
 app = Flask(__name__)
@@ -27,6 +26,7 @@ SAFE_WORDS = {
     "guarantee": "assurance",
     "act now": "respond soon"
 }
+
 
 # CLEAN MESSAGE
 def clean_message(text):
@@ -67,6 +67,7 @@ def launcher():
     if "user" not in session:
         return redirect(url_for("login"))
 
+    # ALWAYS CURRENT DATA
     data = {
         "sender_name": "",
         "gmail": "",
@@ -87,7 +88,7 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # KEEP DATA
+        # CURRENT FILLED DATA
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -101,7 +102,7 @@ def launcher():
 
             emails = []
 
-            # EMAIL SPLIT
+            # SPLIT EMAILS
             for line in recipients.splitlines():
 
                 if "," in line:
@@ -122,12 +123,13 @@ def launcher():
                     if line:
                         emails.append(line)
 
+            # LIMIT
             emails = emails[:DAILY_LIMIT]
 
             # CLEAN BODY
             cleaned_body = clean_message(body)
 
-            # KEEP LINE STRUCTURE
+            # KEEP TEMPLATE STRUCTURE
             html_body = cleaned_body.replace("\n", "<br>")
 
             # SMTP
@@ -141,44 +143,27 @@ def launcher():
 
             for receiver in emails:
 
-                # RANDOM OPENER
-                opener = random.choice(OPENERS)
-
                 final_html = f"""
                 <html>
                 <body style="font-family:Arial;font-size:16px;line-height:1.6;color:#222;">
 
-                <p>{opener}</p>
-
                 <p>{html_body}</p>
-
-                <br>
-
-                <p style="font-size:12px;color:gray;">
-                If you'd prefer not to receive future emails,
-                reply with unsubscribe.
-                </p>
 
                 </body>
                 </html>
                 """
 
-                # MULTIPART EMAIL
+                # MULTIPART
                 msg = MIMEMultipart("alternative")
 
-                plain_text = f"""
-{opener}
-
-{cleaned_body}
-
-"""
+                plain_text = cleaned_body
 
                 msg.attach(MIMEText(plain_text, "plain"))
                 msg.attach(MIMEText(final_html, "html"))
 
                 msg["Subject"] = subject
 
-                # ONLY NAME SHOW
+                # ONLY NAME
                 msg["From"] = f"{sender_name} <{gmail}>"
 
                 msg["To"] = receiver
