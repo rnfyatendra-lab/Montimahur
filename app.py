@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session
+from flask import Flask, render_template, request, redirect, url_for, session, flash
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import smtplib
@@ -7,12 +7,17 @@ import re
 
 app = Flask(__name__)
 
-app.secret_key = "fastmailer"
+app.secret_key = "safemailer"
 
 # SAFE SPEED
 BATCH_SIZE = 3
 BATCH_DELAY = 1000
-DAILY_LIMIT = 100
+
+# 1 HOUR LIMIT
+HOURLY_LIMIT = 28
+
+# TRACKER
+mail_tracker = {}
 
 
 # SAFE WORDS
@@ -57,6 +62,8 @@ def login():
 
             return redirect(url_for("launcher"))
 
+        flash("Invalid Login")
+
     return render_template("login.html")
 
 
@@ -67,7 +74,6 @@ def launcher():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    # ALWAYS CURRENT DATA
     data = {
         "sender_name": "",
         "gmail": "",
@@ -76,8 +82,6 @@ def launcher():
         "body": "",
         "recipients": ""
     }
-
-    message = ""
 
     if request.method == "POST":
 
@@ -88,7 +92,7 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # CURRENT FILLED DATA
+        # KEEP CURRENT DATA
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -100,9 +104,27 @@ def launcher():
 
         try:
 
+            current_time = time.time()
+
+            # NEW ACCOUNT
+            if gmail not in mail_tracker:
+
+                mail_tracker[gmail] = {
+                    "count": 0,
+                    "start": current_time
+                }
+
+            # RESET AFTER 1 HOUR
+            elapsed = current_time - mail_tracker[gmail]["start"]
+
+            if elapsed > 3600:
+
+                mail_tracker[gmail]["count"] = 0
+                mail_tracker[gmail]["start"] = current_time
+
+            # EMAIL LIST
             emails = []
 
-            # SPLIT EMAILS
             for line in recipients.splitlines():
 
                 if "," in line:
@@ -123,13 +145,22 @@ def launcher():
                     if line:
                         emails.append(line)
 
-            # LIMIT
-            emails = emails[:DAILY_LIMIT]
+            # LIMIT CHECK
+            current_count = mail_tracker[gmail]["count"]
+
+            if current_count + len(emails) > HOURLY_LIMIT:
+
+                flash("Limit Full")
+
+                return render_template(
+                    "launcher.html",
+                    data=data
+                )
 
             # CLEAN BODY
             cleaned_body = clean_message(body)
 
-            # KEEP TEMPLATE STRUCTURE
+            # KEEP SAME TEMPLATE LINES
             html_body = cleaned_body.replace("\n", "<br>")
 
             # SMTP
@@ -143,23 +174,20 @@ def launcher():
 
             for receiver in emails:
 
-                final_html = f"""
+                html = f"""
                 <html>
                 <body style="font-family:Arial;font-size:16px;line-height:1.6;color:#222;">
 
-                <p>{html_body}</p>
+                {html_body}
 
                 </body>
                 </html>
                 """
 
-                # MULTIPART
                 msg = MIMEMultipart("alternative")
 
-                plain_text = cleaned_body
-
-                msg.attach(MIMEText(plain_text, "plain"))
-                msg.attach(MIMEText(final_html, "html"))
+                msg.attach(MIMEText(cleaned_body, "plain"))
+                msg.attach(MIMEText(html, "html"))
 
                 msg["Subject"] = subject
 
@@ -176,6 +204,8 @@ def launcher():
 
                 sent += 1
 
+                mail_tracker[gmail]["count"] += 1
+
                 # SAFE DELAY
                 if sent % BATCH_SIZE == 0:
 
@@ -183,15 +213,14 @@ def launcher():
 
             server.quit()
 
-            message = f"Send {sent}"
+            flash(f"Send {sent}")
 
         except Exception as e:
 
-            message = f"Error: {str(e)}"
+            flash(f"Error: {str(e)}")
 
     return render_template(
         "launcher.html",
-        message=message,
         data=data
     )
 
