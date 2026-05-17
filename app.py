@@ -9,21 +9,24 @@ app = Flask(__name__)
 app.secret_key = "fastmailer"
 
 
-# LIMIT SETTINGS
-MAX_PER_HOUR = 28
+# =========================
+# SPEED SETTINGS
+# =========================
+BATCH_SIZE = 5
+BATCH_DELAY = 300
+DAILY_LIMIT = 500
 
-# SAFE SPEED
-DELAY_BETWEEN_MAILS = 25
 
-
+# =========================
 # LOGIN
+# =========================
 @app.route("/", methods=["GET", "POST"])
 def login():
 
     if request.method == "POST":
 
-        username = request.form.get("username")
-        password = request.form.get("password")
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "").strip()
 
         if username == "&&&&" and password == "&&&&":
 
@@ -38,14 +41,16 @@ def login():
     return render_template("login.html")
 
 
+# =========================
 # MAILER
+# =========================
 @app.route("/launcher", methods=["GET", "POST"])
 def launcher():
 
     if "user" not in session:
         return redirect(url_for("login"))
 
-    # DEFAULT DATA
+    # KEEP DATA
     data = {
         "sender_name": "",
         "gmail": "",
@@ -66,7 +71,7 @@ def launcher():
         body = request.form.get("body", "").strip()
         recipients = request.form.get("recipients", "").strip()
 
-        # SAVE CURRENT DATA
+        # SAVE CURRENT VALUES
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -101,10 +106,15 @@ def launcher():
                     if line:
                         emails.append(line)
 
-            # LIMIT CHECK
-            if len(emails) > MAX_PER_HOUR:
+            # REMOVE DUPLICATES
+            emails = list(dict.fromkeys(emails))
 
-                flash(f"Limit Full ({MAX_PER_HOUR} per hour)")
+            # DAILY LIMIT
+            emails = emails[:DAILY_LIMIT]
+
+            if len(emails) == 0:
+
+                flash("No Recipients Found")
 
                 return render_template(
                     "launcher.html",
@@ -125,11 +135,14 @@ def launcher():
 
             for receiver in emails:
 
+                # KEEP SAME TEMPLATE LINES
+                html_body = body.replace("\n", "<br>")
+
                 html = f"""
                 <html>
                 <body style="font-family:Arial;font-size:16px;color:#222;line-height:1.6;">
 
-                <p>{body.replace(chr(10), "<br>")}</p>
+                {html_body}
 
                 </body>
                 </html>
@@ -152,13 +165,16 @@ def launcher():
 
                 sent += 1
 
-                # SAFE DELAY
-                time.sleep(DELAY_BETWEEN_MAILS)
+                # SPEED CONTROL
+                if sent % BATCH_SIZE == 0:
+
+                    time.sleep(BATCH_DELAY / 1000)
 
             server.quit()
 
             total_sent = sent
 
+            # SUCCESS POPUP
             flash(f"Send {sent}")
 
         except Exception as e:
@@ -172,7 +188,9 @@ def launcher():
     )
 
 
+# =========================
 # LOGOUT
+# =========================
 @app.route("/logout")
 def logout():
 
@@ -181,6 +199,9 @@ def logout():
     return redirect(url_for("login"))
 
 
+# =========================
+# RUN
+# =========================
 if __name__ == "__main__":
 
     app.run(
