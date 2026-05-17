@@ -11,8 +11,8 @@ app.secret_key = "fastmailer"
 
 
 # SAFE SETTINGS
- BATCH_SIZE = 5;
- BATCH_DELAY = 300;
+BATCH_SIZE = 3
+BATCH_DELAY = 10
 HOURLY_LIMIT = 28
 
 
@@ -73,7 +73,7 @@ def launcher():
 
         return redirect(url_for("login"))
 
-    # KEEP VALUES
+    # KEEP DATA
     data = {
         "sender_name": "",
         "gmail": "",
@@ -122,6 +122,7 @@ def launcher():
                             p = p.strip()
 
                             if p:
+
                                 emails.append(p)
 
                     else:
@@ -138,10 +139,9 @@ def launcher():
                     data=data
                 )
 
-            # CLEAN BODY
+            # SAFE BODY
             cleaned_body = clean_message(body)
 
-            # KEEP TEMPLATE LINES
             html_body = cleaned_body.replace("\n", "<br>")
 
             # SMTP
@@ -155,25 +155,19 @@ def launcher():
 
             for receiver in emails:
 
-                # EMAIL
                 msg = MIMEMultipart("alternative")
 
                 msg["Subject"] = subject
 
-                # ONLY NAME SHOW
                 msg["From"] = f"{sender_name} <{gmail}>"
 
                 msg["To"] = receiver
 
-                # HTML TEMPLATE
+                plain = cleaned_body
+
                 html = f"""
                 <html>
-                <body style="
-                font-family:Arial;
-                font-size:16px;
-                color:#222;
-                line-height:1.6;
-                ">
+                <body style="font-family:Arial;font-size:16px;color:#222;line-height:1.6;">
 
                 {html_body}
 
@@ -181,14 +175,10 @@ def launcher():
                 </html>
                 """
 
-                # PLAIN TEXT
-                plain = cleaned_body
-
                 msg.attach(MIMEText(plain, "plain"))
 
                 msg.attach(MIMEText(html, "html"))
 
-                # SEND
                 server.sendmail(
                     gmail,
                     receiver,
@@ -197,7 +187,7 @@ def launcher():
 
                 sent += 1
 
-                # SAFE SLOW DELAY
+                # SAFE DELAY
                 if sent % BATCH_SIZE == 0:
 
                     time.sleep(BATCH_DELAY)
