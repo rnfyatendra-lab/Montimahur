@@ -1,36 +1,58 @@
 <!DOCTYPE html>
 <html>
+
 <head>
+
     <title>AI Bulk Mailer</title>
 
     <style>
 
         body{
-            font-family: Arial;
-            background:#f2f2f2;
+            background:#f4f4f4;
+            font-family:Arial;
             padding:40px;
         }
 
         .box{
             background:white;
-            padding:20px;
             width:500px;
             margin:auto;
+            padding:30px;
             border-radius:10px;
+            box-shadow:0px 0px 10px rgba(0,0,0,0.1);
+        }
+
+        h1{
+            text-align:center;
         }
 
         input, textarea{
             width:100%;
-            padding:10px;
+            padding:12px;
             margin-top:10px;
             margin-bottom:20px;
+            border:1px solid #ccc;
+            border-radius:5px;
         }
 
         button{
-            padding:10px 20px;
+            width:100%;
+            padding:12px;
             background:black;
             color:white;
             border:none;
+            border-radius:5px;
+            cursor:pointer;
+        }
+
+        button:hover{
+            background:#333;
+        }
+
+        .message{
+            color:green;
+            text-align:center;
+            margin-bottom:20px;
         }
 
     </style>
@@ -41,31 +63,39 @@
 
 <div class="box">
 
-<h1>AI Bulk Mailer</h1>
+    <h1>AI Bulk Mailer</h1>
 
-<p>{{message}}</p>
+    {% if message %}
+        <div class="message">
+            {{message}}
+        </div>
+    {% endif %}
 
-<form method="POST">
+    <form method="POST">
 
-<input
-type="text"
-name="subject"
-placeholder="Subject"
-required
->
+        <label>Email Subject</label>
 
-<textarea
-name="body"
-rows="10"
-placeholder="Write Email"
-required
-></textarea>
+        <input
+        type="text"
+        name="subject"
+        placeholder="Enter Subject"
+        required
+        >
 
-<button type="submit">
-Send Emails
-</button>
+        <label>Email Body</label>
 
-</form>
+        <textarea
+        name="body"
+        rows="10"
+        placeholder="Write Email Here..."
+        required
+        ></textarea>
+
+        <button type="submit">
+            Send Emails
+        </button>
+
+    </form>
 
 </div>
 
