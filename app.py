@@ -39,6 +39,7 @@ def launcher():
     if "user" not in session:
         return redirect(url_for("login"))
 
+    # KEEP OLD DATA
     data = {
         "sender_name": "",
         "gmail": "",
@@ -59,7 +60,7 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # SAVE DATA
+        # SAVE CURRENT DATA
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -73,6 +74,7 @@ def launcher():
 
             emails = []
 
+            # SPLIT EMAILS
             for line in recipients.splitlines():
 
                 if "," in line:
@@ -105,7 +107,7 @@ def launcher():
 
             sent = 0
 
-            for index, receiver in enumerate(emails):
+            for receiver in emails:
 
                 html = f"""
                 <html>
@@ -121,7 +123,7 @@ def launcher():
 
                 msg["Subject"] = subject
 
-                # ONLY NAME
+                # ONLY NAME SHOW
                 msg["From"] = f"{sender_name} <{gmail}>"
 
                 msg["To"] = receiver
@@ -134,21 +136,14 @@ def launcher():
 
                 sent += 1
 
-                # BATCH DELAY
+                # SPEED CONTROL
                 if sent % BATCH_SIZE == 0:
                     time.sleep(BATCH_DELAY / 1000)
 
             server.quit()
 
-            # AUTO RESET AFTER SEND
-            data = {
-                "sender_name": "",
-                "gmail": "",
-                "app_password": "",
-                "subject": "",
-                "body": "",
-                "recipients": ""
-            }
+            # NO RESET
+            # DATA SAME RAHEGI
 
             message = f"Send {sent}"
 
