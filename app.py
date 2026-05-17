@@ -1,44 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash
-from email.mime.multipart import MIMEMultipart
+from flask import Flask, render_template, request, redirect, url_for, session
 from email.mime.text import MIMEText
 import smtplib
-import time
-import re
 
 app = Flask(__name__)
 
 app.secret_key = "fastmailer"
-
-const BATCH_SIZE = 5;
-const BATCH_DELAY = 300;
-const DAILY_LIMIT = 500;
-
-
-# SAFE WORD FILTER
-SAFE_WORDS = {
-    "free": "complimentary",
-    "urgent": "important",
-    "buy now": "learn more",
-    "click here": "view details",
-    "winner": "selected",
-    "cheap": "affordable",
-    "guarantee": "assurance",
-    "act now": "respond soon"
-}
-
-
-# CLEAN TEXT
-def clean_message(text):
-
-    result = text
-
-    for bad, good in SAFE_WORDS.items():
-
-        pattern = re.compile(re.escape(bad), re.IGNORECASE)
-
-        result = pattern.sub(good, result)
-
-    return result
 
 
 # LOGIN
@@ -50,35 +16,24 @@ def login():
         username = request.form.get("username")
         password = request.form.get("password")
 
+        # SAME LOGIN + PASSWORD
         if username == "&&&&" and password == "&&&&":
 
             session["user"] = username
 
             return redirect(url_for("launcher"))
 
-        else:
-
-            flash("Wrong Login")
-
     return render_template("login.html")
 
 
-# MAILER
+# MAILER PAGE
 @app.route("/launcher", methods=["GET", "POST"])
 def launcher():
 
     if "user" not in session:
-
         return redirect(url_for("login"))
 
-    data = {
-        "sender_name": "",
-        "gmail": "",
-        "app_password": "",
-        "subject": "",
-        "body": "",
-        "recipients": ""
-    }
+    message = ""
 
     if request.method == "POST":
 
@@ -89,55 +44,27 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # KEEP INPUT DATA
-        data = {
-            "sender_name": sender_name,
-            "gmail": gmail,
-            "app_password": app_password,
-            "subject": subject,
-            "body": body,
-            "recipients": recipients
-        }
-
         try:
 
+            # EMAIL LIST
             emails = []
 
             for line in recipients.splitlines():
 
-                line = line.strip()
+                if "," in line:
+                    parts = line.split(",")
 
-                if line:
+                    for p in parts:
+                        p = p.strip()
 
-                    if "," in line:
+                        if p:
+                            emails.append(p)
 
-                        parts = line.split(",")
+                else:
+                    line = line.strip()
 
-                        for p in parts:
-
-                            p = p.strip()
-
-                            if p:
-                                emails.append(p)
-
-                    else:
-
+                    if line:
                         emails.append(line)
-
-            # LIMIT
-            if len(emails) > HOURLY_LIMIT:
-
-                flash("Limit Full")
-
-                return render_template(
-                    "launcher.html",
-                    data=data
-                )
-
-            # SAFE BODY
-            cleaned_body = clean_message(body)
-
-            html_body = cleaned_body.replace("\n", "<br>")
 
             # SMTP
             server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -150,28 +77,30 @@ def launcher():
 
             for receiver in emails:
 
-                msg = MIMEMultipart("alternative")
-
-                msg["Subject"] = subject
-
-                # ONLY NAME SHOW
-                msg["From"] = f"{sender_name} <{gmail}>"
-
-                msg["To"] = receiver
-
-                plain_text = cleaned_body
-
                 html = f"""
                 <html>
-                <body style="font-family:Arial;font-size:16px;color:#222;line-height:1.6;">
-                {html_body}
+                <body>
+
+                <h3>Hello</h3>
+
+                <p>{body}</p>
+
+                <br>
+
+                <p>
+                Thanks<br>
+                {sender_name}
+                </p>
+
                 </body>
                 </html>
                 """
 
-                msg.attach(MIMEText(plain_text, "plain"))
+                msg = MIMEText(html, "html")
 
-                msg.attach(MIMEText(html, "html"))
+                msg["Subject"] = subject
+                msg["From"] = gmail
+                msg["To"] = receiver
 
                 server.sendmail(
                     gmail,
@@ -181,22 +110,17 @@ def launcher():
 
                 sent += 1
 
-                # SAFE DELAY
-                if sent % BATCH_SIZE == 0:
-
-                    time.sleep(BATCH_DELAY)
-
             server.quit()
 
-            flash(f"Send {sent}")
+            message = f"Successfully sent {sent} emails"
 
         except Exception as e:
 
-            flash(f"Error: {str(e)}")
+            message = f"Error: {str(e)}"
 
     return render_template(
         "launcher.html",
-        data=data
+        message=message
     )
 
 
