@@ -11,8 +11,8 @@ app.secret_key = "fastmailer"
 
 
 # SAFE SETTINGS
-BATCH_SIZE = 1
-BATCH_DELAY = 25
+ BATCH_SIZE = 5;
+ BATCH_DELAY = 300;
 HOURLY_LIMIT = 28
 
 
