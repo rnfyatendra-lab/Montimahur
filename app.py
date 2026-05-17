@@ -2,16 +2,45 @@ from flask import Flask, render_template, request, redirect, url_for, session
 from email.mime.text import MIMEText
 import smtplib
 import time
+import re
 
 app = Flask(__name__)
 
 app.secret_key = "fastmailer"
 
+# SPEED
+BATCH_SIZE = 6
+BATCH_DELAY = 400
+DAILY_LIMIT = 600
 
-# SPEED SETTINGS
-BATCH_SIZE = 5
-BATCH_DELAY = 300
-DAILY_LIMIT = 500
+
+# SAFE WORD REPLACER
+SAFE_WORDS = {
+    "free": "complimentary",
+    "buy now": "learn more",
+    "urgent": "important",
+    "click here": "view details",
+    "winner": "selected",
+    "guarantee": "assurance",
+    "cheap": "affordable",
+    "earn money": "grow income",
+    "act now": "respond soon",
+    "limited offer": "available opportunity"
+}
+
+
+# CLEAN MESSAGE
+def clean_message(text):
+
+    result = text
+
+    for bad, good in SAFE_WORDS.items():
+
+        pattern = re.compile(re.escape(bad), re.IGNORECASE)
+
+        result = pattern.sub(good, result)
+
+    return result
 
 
 # LOGIN
@@ -39,7 +68,6 @@ def launcher():
     if "user" not in session:
         return redirect(url_for("login"))
 
-    # KEEP OLD DATA
     data = {
         "sender_name": "",
         "gmail": "",
@@ -60,7 +88,7 @@ def launcher():
         body = request.form.get("body")
         recipients = request.form.get("recipients")
 
-        # SAVE CURRENT DATA
+        # SAVE DATA
         data = {
             "sender_name": sender_name,
             "gmail": gmail,
@@ -95,8 +123,13 @@ def launcher():
                     if line:
                         emails.append(line)
 
-            # LIMIT
             emails = emails[:DAILY_LIMIT]
+
+            # SAFE MESSAGE
+            cleaned_body = clean_message(body)
+
+            # KEEP TEMPLATE LINES
+            html_body = cleaned_body.replace("\n", "<br>")
 
             # SMTP
             server = smtplib.SMTP("smtp.gmail.com", 587)
@@ -111,9 +144,9 @@ def launcher():
 
                 html = f"""
                 <html>
-                <body>
+                <body style="font-family:Arial;font-size:16px;line-height:1.6;">
 
-                <p>{body}</p>
+                {html_body}
 
                 </body>
                 </html>
@@ -123,7 +156,7 @@ def launcher():
 
                 msg["Subject"] = subject
 
-                # ONLY NAME SHOW
+                # ONLY NAME
                 msg["From"] = f"{sender_name} <{gmail}>"
 
                 msg["To"] = receiver
@@ -138,12 +171,10 @@ def launcher():
 
                 # SPEED CONTROL
                 if sent % BATCH_SIZE == 0:
+
                     time.sleep(BATCH_DELAY / 1000)
 
             server.quit()
-
-            # NO RESET
-            # DATA SAME RAHEGI
 
             message = f"Send {sent}"
 
