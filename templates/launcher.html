@@ -85,8 +85,17 @@ textarea{
 .message{
     text-align:center;
     color:green;
-    font-size:20px;
+    font-size:28px;
     margin-bottom:20px;
+    font-weight:bold;
+}
+
+.counter{
+    text-align:center;
+    color:#2563eb;
+    font-size:22px;
+    margin-bottom:20px;
+    font-weight:bold;
 }
 
 </style>
@@ -113,6 +122,16 @@ textarea{
 
 {% endif %}
 
+{% if total_sent > 0 %}
+
+<div class="counter">
+
+Total Sent : {{total_sent}}
+
+</div>
+
+{% endif %}
+
 <form method="POST">
 
 <div class="row">
@@ -121,6 +140,7 @@ textarea{
 type="text"
 name="sender_name"
 placeholder="Sender Name"
+value="{{data.sender_name}}"
 required
 >
 
@@ -128,6 +148,7 @@ required
 type="email"
 name="gmail"
 placeholder="Your Gmail"
+value="{{data.gmail}}"
 required
 >
 
@@ -139,6 +160,7 @@ required
 type="password"
 name="app_password"
 placeholder="App Password"
+value="{{data.app_password}}"
 required
 >
 
@@ -146,6 +168,7 @@ required
 type="text"
 name="subject"
 placeholder="Subject"
+value="{{data.subject}}"
 required
 >
 
@@ -157,13 +180,13 @@ required
 name="body"
 placeholder="Message Body"
 required
-></textarea>
+>{{data.body}}</textarea>
 
 <textarea
 name="recipients"
 placeholder="Recipients (comma or newline)"
 required
-></textarea>
+>{{data.recipients}}</textarea>
 
 </div>
 
