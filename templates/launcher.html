@@ -21,11 +21,13 @@ margin-top:40px;
 background:white;
 padding:40px;
 border-radius:20px;
+position:relative;
 }
 
 h1{
 text-align:center;
 margin-bottom:40px;
+font-size:60px;
 }
 
 .row{
@@ -70,18 +72,20 @@ cursor:not-allowed;
 width:180px;
 }
 
+/* TOP RIGHT POPUP */
 .popup{
-position:fixed;
+position:absolute;
 top:20px;
 right:20px;
 background:#222;
 color:white;
-padding:20px;
+padding:18px;
 border-radius:15px;
 z-index:9999;
-min-width:120px;
+min-width:180px;
 text-align:center;
 box-shadow:0 0 10px rgba(0,0,0,0.2);
+animation:fadein 0.3s;
 }
 
 .okbtn{
@@ -93,6 +97,18 @@ border:none;
 border-radius:10px;
 cursor:pointer;
 font-size:18px;
+width:100%;
+}
+
+@keyframes fadein{
+from{
+opacity:0;
+transform:translateY(-10px);
+}
+to{
+opacity:1;
+transform:translateY(0);
+}
 }
 
 </style>
@@ -111,7 +127,9 @@ font-size:18px;
 
 <div>{{ messages[0] }}</div>
 
-<button class="okbtn" onclick="closePopup()">OK</button>
+<button class="okbtn" onclick="closePopup()">
+OK
+</button>
 
 </div>
 
@@ -179,9 +197,7 @@ required
 <div class="row">
 
 <button id="sendbtn" type="submit">
-
 Send All
-
 </button>
 
 <button
@@ -189,9 +205,7 @@ type="button"
 class="logout"
 ondblclick="window.location='/logout'"
 >
-
 Logout
-
 </button>
 
 </div>
@@ -208,7 +222,7 @@ const sendbtn = document.getElementById("sendbtn");
 
 let sending = false;
 
-form.addEventListener("submit", function(){
+form.addEventListener("submit", function(event){
 
 if(sending){
 event.preventDefault();
@@ -224,7 +238,11 @@ sendbtn.disabled = true;
 
 function closePopup(){
 
-document.getElementById("popup").style.display = "none";
+const popup = document.getElementById("popup");
+
+if(popup){
+popup.style.display = "none";
+}
 
 }
 
