@@ -11,7 +11,7 @@ const PORT = process.env.PORT || 3000;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(session({
-  secret: process.env.SESSION_SECRET || 'hyper-mailer-speed-key',
+  secret: process.env.SESSION_SECRET || 'fast-mailer-secret-2024',
   resave: false,
   saveUninitialized: false,
   cookie: { secure: false, maxAge: 1000 * 60 * 60 * 8 }
@@ -34,13 +34,17 @@ app.get('/launcher', requireLogin, (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const validUser = process.env.ADMIN_USER || 'admin';
-  const validPass = process.env.ADMIN_PASS || 'admin123';
+  const validUser = process.env.ADMIN_USER || 'rrrr';
+  const validPass = process.env.ADMIN_PASS || 'rrrr';
   if (username === validUser && password === validPass) {
     req.session.loggedIn = true;
     return res.json({ success: true });
   }
-  res.json({ success: false, message: 'Invalid credentials' });
+  res.json({ success: false, message: 'Invalid username or password' });
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy(() => res.json({ success: true }));
 });
 
 app.post('/api/send-email', requireLogin, async (req, res) => {
@@ -59,12 +63,14 @@ app.post('/api/send-email', requireLogin, async (req, res) => {
       to,
       subject,
       text: messageBody
+      // HTML nahi — plain text = personal email = Primary inbox
+      // Koi bulk/newsletter headers nahi
     });
     res.json({ success: true });
   } catch (err) {
-    console.error(`❌ Delivery error for ${to}:`, err.message);
+    console.error(`❌ ${to}:`, err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 });
 
-app.listen(PORT, () => console.log(`🚀 Fast Mailer online on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Fast Mailer on port ${PORT}`));
