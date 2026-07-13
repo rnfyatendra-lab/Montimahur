@@ -34,8 +34,8 @@ app.get('/launcher', requireLogin, (req, res) => {
 
 app.post('/login', (req, res) => {
   const { username, password } = req.body;
-  const validUser = process.env.ADMIN_USER || 'mmmm';
-  const validPass = process.env.ADMIN_PASS || 'mmmm';
+  const validUser = process.env.ADMIN_USER || '####';
+  const validPass = process.env.ADMIN_PASS || '####';
   if (username === validUser && password === validPass) {
     req.session.loggedIn = true;
     return res.json({ success: true });
@@ -63,8 +63,6 @@ app.post('/api/send-email', requireLogin, async (req, res) => {
       to,
       subject,
       text: messageBody
-      // HTML nahi — plain text = personal email = Primary inbox
-      // Koi bulk/newsletter headers nahi
     });
     res.json({ success: true });
   } catch (err) {
