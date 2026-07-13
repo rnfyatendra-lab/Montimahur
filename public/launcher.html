@@ -22,26 +22,33 @@ body{min-height:100vh;background:#eef0ff;font-family:'Inter',sans-serif;color:#1
 .status-bar.success .status-text{color:#276749}
 .status-bar.error .status-text{color:#e53e3e}
 .status-bar.sending .status-text{color:#667eea}
-.main-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
-.card{background:#fff;border:2px solid #dde1ff;border-radius:16px;padding:24px;box-shadow:0 2px 10px rgba(102,126,234,0.07)}
-.card-title{font-size:12px;font-weight:700;color:#667eea;text-transform:uppercase;letter-spacing:1.2px;margin-bottom:18px}
-.field{margin-bottom:15px}
+
+/* आमने-सामने वाले कॉलम के लिए नया ग्रिड लेआउट */
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  background: #fff;
+  border: 2px solid #dde1ff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 2px 10px rgba(102,126,234,0.07);
+  margin-bottom: 20px;
+}
+.field{margin-bottom:5px}
 .field label{display:block;font-size:13px;font-weight:600;color:#333;margin-bottom:7px}
 .field input,.field textarea{width:100%;padding:12px 15px;background:#f5f6ff;border:2px solid #dde1ff;border-radius:10px;color:#1a1a2e;font-family:'Inter',sans-serif;font-size:14px;outline:none;transition:all 0.2s;resize:none}
 .field input:focus,.field textarea:focus{border-color:#667eea;background:#fff;box-shadow:0 0 0 4px rgba(102,126,234,0.12)}
 .field input::placeholder,.field textarea::placeholder{color:#bbb}
-textarea#messageBody{min-height:115px}
-textarea#recipients{min-height:145px;font-size:13px}
+textarea#messageBody, textarea#recipients{min-height:180px;font-size:13px}
 .pass-wrap{position:relative}
 .pass-wrap input{padding-right:46px}
 .toggle-pass{position:absolute;right:13px;top:50%;transform:translateY(-50%);background:none;border:none;color:#aaa;cursor:pointer;font-size:17px;padding:4px;transition:color 0.2s}
 .toggle-pass:hover{color:#667eea}
 .rec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px}
 .rec-header label{margin-bottom:0}
-.badge{font-size:11px;font-weight:700;padding:3px 12px;background:#667eea;color:#fff;border-radius:20px;transition:background 0.3s}
-.tips{padding:14px;background:#f5f6ff;border:2px solid #dde1ff;border-radius:10px;font-size:12px;color:#666;line-height:1.9;margin-top:14px}
-.tips strong{color:#444;display:block;margin-bottom:5px;font-size:11px;text-transform:uppercase;letter-spacing:0.8px;font-weight:700}
-.tips b{color:#667eea}
+.badge{font-size:11px;font-weight:700;padding:3px 12px;background:#667eea;color:#fff;border-radius:20px}
+
 .progress-wrap{display:none;align-items:center;gap:14px;padding:14px 20px;background:#fff;border:2px solid #dde1ff;border-radius:12px;margin-bottom:20px}
 .progress-bar{flex:1;height:8px;background:#eef0ff;border-radius:10px;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:10px;width:0%;transition:width 0.3s ease}
@@ -63,7 +70,7 @@ textarea#recipients{min-height:145px;font-size:13px}
 .log-item.ok{background:#f0fff4;color:#276749}
 .log-item.fail{background:#fff5f5;color:#e53e3e}
 .log-item.info{background:#ebf4ff;color:#2b6cb0}
-@media(max-width:700px){.main-grid{grid-template-columns:1fr}body{padding:14px}}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr}body{padding:14px}}
 </style>
 </head>
 <body>
@@ -78,38 +85,45 @@ textarea#recipients{min-height:145px;font-size:13px}
   <span class="status-text" id="statusText">Ready to launch</span>
 </div>
 
-<div class="main-grid">
-  <div class="card">
-    <div class="card-title">⚙️ Sender Config</div>
-    <div class="field"><label>Sender Name</label><input id="senderName" type="text" placeholder="e.g. Rahul Sharma"></div>
-    <div class="field"><label>Gmail ID</label><input id="gmailId" type="email" placeholder="you@gmail.com"></div>
-    <div class="field">
-      <label>App Password</label>
-      <div class="pass-wrap">
-        <input id="appPassword" type="password" placeholder="Google App Password">
-        <button class="toggle-pass" onclick="togglePass()">👁</button>
-      </div>
-    </div>
-    <div class="field"><label>Subject</label><input id="subject" type="text" placeholder="Email subject line"></div>
-    <div class="field"><label>Message Body</label><textarea id="messageBody" placeholder="Write your email content here..."></textarea></div>
+<!-- आमने सामने वाला नया लेआउट स्ट्रक्चर -->
+<div class="form-grid">
+  <!-- रो 1, कॉलम 1 -->
+  <div class="field">
+    <label>Sender Name</label>
+    <input id="senderName" type="text" placeholder="e.g. Rahul Sharma">
+  </div>
+  <!-- रो 1, कॉलम 2 -->
+  <div class="field">
+    <label>Your Gmail</label>
+    <input id="gmailId" type="email" placeholder="you@gmail.com">
   </div>
 
-  <div class="card">
-    <div class="card-title">👥 Recipients</div>
-    <div class="field">
-      <div class="rec-header">
-        <label>Email List</label>
-        <span class="badge" id="recipientCount">0 recipients</span>
-      </div>
-      <textarea id="recipients" placeholder="Paste emails here:&#10;&#10;alice@gmail.com&#10;bob@yahoo.com, carol@outlook.com" oninput="countRecipients()"></textarea>
+  <!-- रो 2, कॉलम 1 -->
+  <div class="field">
+    <label>App Password</label>
+    <div class="pass-wrap">
+      <input id="appPassword" type="password" placeholder="Google App Password">
+      <button class="toggle-pass" onclick="togglePass()">👁</button>
     </div>
-    <div class="tips">
-      <strong>📋 Tips</strong>
-      Separate by comma or new line<br>
-      Max <b>50 recipients</b> per batch<br>
-      Use Gmail <b>App Password</b> — not your login password<br>
-      Enable <b>2FA</b> on Gmail → then generate App Password
+  </div>
+  <!-- रो 2, कॉलम 2 -->
+  <div class="field">
+    <label>Subject</label>
+    <input id="subject" type="text" placeholder="Email subject line">
+  </div>
+
+  <!-- रो 3, कॉलम 1 -->
+  <div class="field">
+    <label>Message Body</label>
+    <textarea id="messageBody" placeholder="Write your email content here..."></textarea>
+  </div>
+  <!-- रो 3, कॉलम 2 -->
+  <div class="field">
+    <div class="rec-header">
+      <label>Recipients (comma or newline)</label>
+      <span class="badge" id="recipientCount">0 recipients</span>
     </div>
+    <textarea id="recipients" placeholder="Paste emails here..." oninput="countRecipients()"></textarea>
   </div>
 </div>
 
@@ -141,7 +155,7 @@ function clearLog(){document.getElementById('logList').innerHTML='';document.get
 function setProgress(cur,tot){const w=document.getElementById('progressWrap');w.style.display='flex';const pct=tot>0?Math.round(cur/tot*100):0;document.getElementById('progressFill').style.width=pct+'%';document.getElementById('progressText').textContent=`Sending ${cur} / ${tot}`}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 function validate(){
-  const fields=[{id:'senderName',label:'Sender Name'},{id:'gmailId',label:'Gmail ID'},{id:'appPassword',label:'App Password'},{id:'subject',label:'Subject'},{id:'messageBody',label:'Message Body'}];
+  const fields=[{id:'senderName',label:'Sender Name'},{id:'gmailId',label:'Your Gmail'},{id:'appPassword',label:'App Password'},{id:'subject',label:'Subject'},{id:'messageBody',label:'Message Body'}];
   for(const f of fields){if(!document.getElementById(f.id).value.trim()){setStatus('error','❌',`${f.label} is required`);document.getElementById(f.id).focus();return false}}
   const emails=parseEmails(document.getElementById('recipients').value);
   if(emails.length===0){setStatus('error','❌','Add at least 1 valid recipient email');return false}
@@ -162,7 +176,7 @@ async function sendAll(){
   
   let ok=0,fail=0;
 
-  // फिक्स: लूप को i += 6 किया ताकि हर बार 6 ईमेल का ग्रुप बने
+  // 6-6 ईमेल समानांतर में भेजने की गति
   for(let i=0; i<emails.length; i+=6){
     const chunk = emails.slice(i, i+6);
     
@@ -179,14 +193,9 @@ async function sendAll(){
       }catch{fail++;addLog('fail','❌',`Error → ${email}`)}
     });
 
-    // 6 ईमेल को एक साथ (Parallel) बैकएंड पर भेजा
     await Promise.all(promises);
-    
-    // प्रोग्रेस बार अपडेट
     setProgress(Math.min(i + chunk.length, emails.length), emails.length);
-    
-    // इनबॉक्स डिलीवरी के लिए सेफ डिले: हर 6 ईमेल के बाद 2 सेकंड (500ms) का ब्रेक
-    if(i + 6 < emails.length) await sleep(500);
+    if(i + 6 < emails.length) await sleep(2000);
   }
 
   if(fail===0){setStatus('success','🎉',`All ${ok} emails sent successfully!`);addLog('ok','✅',`${ok} emails delivered successfully`)}
