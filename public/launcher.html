@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fast Mailer — Hyper Launcher</title>
+<title>Fast Mailer — Smart Inbox Launcher</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
@@ -48,6 +48,29 @@ textarea#messageBody, textarea#recipients{min-height:180px;font-size:13px}
 .rec-header label{margin-bottom:0}
 .badge{font-size:11px;font-weight:700;padding:3px 12px;background:#667eea;color:#fff;border-radius:20px}
 
+/* इनबॉक्स ऑप्टिमाइज़र सेटिंग */
+.opt-box {
+  grid-column: span 2;
+  background: #f7fafc;
+  border: 1px dashed #cbd5e0;
+  padding: 12px 16px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.opt-box input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+.opt-box label {
+  font-size: 13px;
+  font-weight: 600;
+  color: #4a5568;
+  cursor: pointer;
+}
+
 .progress-wrap{display:none;align-items:center;gap:14px;padding:14px 20px;background:#fff;border:2px solid #dde1ff;border-radius:12px;margin-bottom:20px}
 .progress-bar{flex:1;height:8px;background:#eef0ff;border-radius:10px;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:10px;width:0%;transition:width 0.3s ease}
@@ -68,7 +91,7 @@ textarea#messageBody, textarea#recipients{min-height:180px;font-size:13px}
 .log-item.ok{background:#f0fff4;color:#276749}
 .log-item.fail{background:#fff5f5;color:#e53e3e}
 .log-item.info{background:#ebf4ff;color:#2b6cb0}
-@media(max-width:700px){.form-grid{grid-template-columns:1fr}body{padding:14px}}
+@media(max-width:700px){.form-grid{grid-template-columns:1fr}.opt-box{grid-column:span 1}body{padding:14px}}
 </style>
 </head>
 <body>
@@ -120,6 +143,12 @@ textarea#messageBody, textarea#recipients{min-height:180px;font-size:13px}
     </div>
     <textarea id="recipients" placeholder="Paste emails here..." oninput="countRecipients()"></textarea>
   </div>
+
+  <!-- एंटी-स्पैम इनबॉक्स ऑप्टिमाइज़र टूल -->
+  <div class="opt-box">
+    <input type="checkbox" id="randomizeSubject" checked>
+    <label for="randomizeSubject">✨ एंटी-स्पैम मोड चालू करें (सब्जेक्ट के आगे यूनिक कोड जोड़ें जिससे मेल डायरेक्ट इनबॉक्स जाए)</label>
+  </div>
 </div>
 
 <div class="progress-wrap" id="progressWrap">
@@ -150,6 +179,11 @@ function clearLog(){document.getElementById('logList').innerHTML='';document.get
 function setProgress(cur,tot){const w=document.getElementById('progressWrap');w.style.display='flex';const pct=tot>0?Math.round(cur/tot*100):0;document.getElementById('progressFill').style.width=pct+'%';document.getElementById('progressText').textContent=`Sending ${cur} / ${tot}`}
 function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 
+// 2 से 5 सेकंड के बीच रैंडम डिले चुनने का फंक्शन
+function getRandomDelay() {
+  return Math.floor(Math.random() * (5000 - 2000 + 1)) + 2000;
+}
+
 function validate(){
   const fields=[{id:'senderName',label:'Sender Name'},{id:'gmailId',label:'Your Gmail'},{id:'appPassword',label:'App Password'},{id:'subject',label:'Subject'},{id:'messageBody',label:'Message Body'}];
   for(const f of fields){if(!document.getElementById(f.id).value.trim()){setStatus('error','❌',`${f.label} is required`);return false}}
@@ -163,8 +197,9 @@ async function sendAll(){
   const senderName=document.getElementById('senderName').value.trim();
   const gmailId=document.getElementById('gmailId').value.trim();
   const appPassword=document.getElementById('appPassword').value.trim();
-  const subject=document.getElementById('subject').value.trim();
+  const baseSubject=document.getElementById('subject').value.trim();
   const messageBody=document.getElementById('messageBody').value.trim();
+  const useRandomSubject=document.getElementById('randomizeSubject').checked;
   const btn=document.getElementById('sendBtn');
   
   btn.disabled=true; btn.innerHTML='⏳ Sending Fast...';
@@ -177,11 +212,16 @@ async function sendAll(){
     const chunk = emails.slice(i, i+6);
     
     const promises = chunk.map(async (email) => {
+      // अगर एंटी-स्पैम मोड चालू है, तो हर ईमेल के लिए सब्जेक्ट में एक अलग यूनिक कोड जोड़ें
+      const finalSubject = useRandomSubject 
+        ? `${baseSubject} [#${Math.floor(1000 + Math.random() * 9000)}]`
+        : baseSubject;
+
       try{
         const res=await fetch('/api/send-email',{
           method:'POST',
           headers:{'Content-Type':'application/json'},
-          body:JSON.stringify({senderName,gmailId,appPassword,subject,messageBody,to:email})
+          body:JSON.stringify({senderName,gmailId,appPassword,subject:finalSubject,messageBody,to:email})
         });
         const d=await res.json();
         if(res.ok && d.success){ok++; addLog('ok','✅',`Delivered → ${email}`)}
@@ -189,12 +229,16 @@ async function sendAll(){
       }catch{fail++; addLog('fail','❌',`Error → ${email}`)}
     });
 
-    // 6 ईमेल को एक साथ बैकएंड पर हिट किया
+    // 6 ईमेल एक साथ फायर होंगे
     await Promise.all(promises);
     setProgress(Math.min(i + chunk.length, emails.length), emails.length);
     
-    // बैच खत्म होने पर थोड़ा सा गैप (2.5 सेकंड) ताकि जीमेल ब्लॉक न करे
-    if(i + 6 < emails.length) await sleep(2500);
+    // हर 6 ईमेल के बाद एक रैंडम इंसानी ब्रेक (2 से 5 सेकंड का) ताकि जीमेल फिल्टर कंफ्यूज रहे
+    if(i + 6 < emails.length) {
+      const delayTime = getRandomDelay();
+      addLog('info','⏳',`Anti-Spam Break: Waiting ${parseFloat((delayTime/1000).toFixed(1))} seconds...`);
+      await sleep(delayTime);
+    }
   }
 
   if(fail===0){setStatus('success','🎉','All emails sent successfully!');addLog('ok','✅','All delivered')}
